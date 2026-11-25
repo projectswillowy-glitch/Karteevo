@@ -38,7 +38,7 @@ export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: strin
     if (hasCloudinary) {
         try {
             const uploadResult = await cloudinary.uploader.upload(dataUri, {
-                folder: process.env.CLOUDINARY_FOLDER || 'judescart',
+                folder: process.env.CLOUDINARY_FOLDER || 'karteevo',
                 resource_type: 'auto',
             });
             if (uploadResult?.secure_url) {
@@ -71,7 +71,7 @@ export const safeDeleteImage = async (imageUrl?: string | null) => {
         } else if (imageUrl.includes('res.cloudinary.com') || imageUrl.includes('cloudinary')) {
             const publicId = imageUrl.split('/').pop()?.split('.')[0];
             if (publicId && process.env.CLOUDINARY_CLOUD_NAME) {
-                const folder = process.env.CLOUDINARY_FOLDER || 'judescart';
+                const folder = process.env.CLOUDINARY_FOLDER || 'karteevo';
                 await (cloudinary as any).uploader.destroy(`${folder}/${publicId}`).catch(() => {});
             }
         }

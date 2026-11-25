@@ -35,7 +35,7 @@ const SEARCH_CATEGORIES = [
 const SAMPLE_PRODUCTS = [
   {
     id: 'prod-1',
-    name: 'JudesCart Utility Wool Overshirt',
+    name: 'Karteevo Utility Wool Overshirt',
     category: 'Apparel',
     price: 4299,
     originalPrice: 5999,

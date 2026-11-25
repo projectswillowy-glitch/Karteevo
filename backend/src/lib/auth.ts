@@ -16,6 +16,8 @@ const defaultOrigins = [
   process.env.NEXT_PUBLIC_APP_URL,
   "https://www.karteevo.com",
   "https://karteevo.com",
+  "https://karteevoadmin.vercel.app",
+  "https://karteevo.vercel.app",
   "https://judescart-admin.vercel.app",
   "https://judescart-ammi.vercel.app",
   "https://judescart-feg8.vercel.app",

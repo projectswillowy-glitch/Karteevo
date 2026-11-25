@@ -42,7 +42,7 @@ export default function InstallAppPage() {
       }
       setDeferredPrompt(null);
     } else {
-      alert('To install the JudesCart Web App, tap "Share" (iOS Safari) or the 3-dot menu (Chrome) and select "Add to Home Screen".');
+      alert('To install the Karteevo Web App, tap "Share" (iOS Safari) or the 3-dot menu (Chrome) and select "Add to Home Screen".');
     }
   };
 
@@ -65,7 +65,7 @@ export default function InstallAppPage() {
           <div className="relative z-10 max-w-xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#DF9F28]/20 text-[#DF9F28] border border-[#DF9F28]/30 text-xs font-bold mb-4">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Official JudesCart Progressive Web App</span>
+              <span>Official Karteevo Progressive Web App</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight mb-4">
@@ -74,7 +74,7 @@ export default function InstallAppPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-8">
-              Install JudesCart directly on your iPhone, iPad, Android, or Desktop. Enjoy ultra-fast load times, instant push alerts for weekly draw numbers, and exclusive app discounts.
+              Install Karteevo directly on your iPhone, iPad, Android, or Desktop. Enjoy ultra-fast load times, instant push alerts for weekly draw numbers, and exclusive app discounts.
             </p>
 
             <div className="flex flex-wrap gap-4">
@@ -84,7 +84,7 @@ export default function InstallAppPage() {
                 className="px-8 py-4 rounded-full bg-[#DF9F28] hover:bg-[#C6891E] text-[#111111] font-bold text-sm tracking-wide transition-all shadow-lg hover:shadow-[#DF9F28]/20 active:scale-98 cursor-pointer flex items-center gap-2"
               >
                 <Download className="w-4 h-4 text-[#111111]" />
-                <span>Install JudesCart App</span>
+                <span>Install Karteevo App</span>
               </button>
 
               <Link
@@ -144,10 +144,10 @@ export default function InstallAppPage() {
                 <h3 className="text-sm font-bold text-[#111111]">Apple iOS (Safari)</h3>
               </div>
               <ol className="list-decimal list-inside space-y-2 text-xs text-[#555555] leading-relaxed">
-                <li>Open <strong className="text-[#111111]">judescart.com</strong> in Safari.</li>
+                <li>Open <strong className="text-[#111111]">karteevo.com</strong> in Safari.</li>
                 <li>Tap the <strong className="text-[#111111]">Share</strong> button at the bottom of the screen.</li>
                 <li>Scroll down and tap <strong className="text-[#111111]">&quot;Add to Home Screen&quot;</strong>.</li>
-                <li>Tap <strong className="text-[#111111]">Add</strong> to launch JudesCart like a native app.</li>
+                <li>Tap <strong className="text-[#111111]">Add</strong> to launch Karteevo like a native app.</li>
               </ol>
             </div>
 
@@ -157,7 +157,7 @@ export default function InstallAppPage() {
                 <h3 className="text-sm font-bold text-[#111111]">Android (Chrome / Brave)</h3>
               </div>
               <ol className="list-decimal list-inside space-y-2 text-xs text-[#555555] leading-relaxed">
-                <li>Open <strong className="text-[#111111]">judescart.com</strong> in Google Chrome.</li>
+                <li>Open <strong className="text-[#111111]">karteevo.com</strong> in Google Chrome.</li>
                 <li>Tap the <strong className="text-[#111111]">three dots (⋮)</strong> menu on the top-right.</li>
                 <li>Select <strong className="text-[#111111]">&quot;Install app&quot;</strong> or <strong className="text-[#111111]">&quot;Add to Home screen&quot;</strong>.</li>
                 <li>Confirm to install the high-speed PWA.</li>

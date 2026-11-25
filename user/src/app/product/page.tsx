@@ -68,7 +68,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     id: 'prod-1',
     name: 'The Oversized Double-Breasted Cocoon Coat',
     category: 'Apparel',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     image: '/prod_overshirt_1778670536589.png',
     subimage: [
       '/prod_overshirt_1778670536589.png',
@@ -87,7 +87,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     id: 'prod-2',
     name: 'The Mongolian Cashmere Cardigan',
     category: 'Apparel',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     image: '/cat_apparel_1778670103427.png',
     subimage: [
       '/cat_apparel_1778670103427.png',
@@ -104,7 +104,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     id: 'prod-3',
     name: 'The Meridian Merino Wool Utility Overshirt',
     category: 'Apparel',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     image: '/prod_overshirt_1778670536589.png',
     subimage: [
       '/prod_overshirt_1778670536589.png',
@@ -121,7 +121,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     id: 'prod-4',
     name: 'Heritage Full-Grain Leather Briefcase',
     category: 'Leather Goods',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     image: '/cat_leather_1778670351299.webp',
     subimage: [
       '/cat_leather_1778670351299.webp',
@@ -138,7 +138,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     id: 'prod-5',
     name: 'Minimalist Burnished Leather Bifold Wallet',
     category: 'Accessories',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     image: '/cat_accessories_1778670517925.png',
     subimage: [
       '/cat_accessories_1778670517925.png',
@@ -155,7 +155,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     id: 'prod-6',
     name: 'The Voyager Full-Grain Leather Weekender Duffel',
     category: 'Leather Goods',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     image: '/about_craftsmanship.png',
     subimage: [
       '/about_craftsmanship.png',
@@ -346,7 +346,7 @@ function ProductContent() {
               id: p.id,
               name: p.name,
               category: p.category?.name || 'Apparel',
-              brand: p.brand?.name || 'JudesCart',
+              brand: p.brand?.name || 'Karteevo',
               price: priceVal,
               originalPrice: origPriceVal,
               image: p.image || p.images?.[0] || '/prod_overshirt_1778670536589.png',
@@ -408,7 +408,7 @@ function ProductContent() {
               variantId: firstVariant?.id,
               name: p.name,
               category: p.category?.name || 'Apparel',
-              brand: p.brand?.name || 'JudesCart',
+              brand: p.brand?.name || 'Karteevo',
               price: priceVal,
               originalPrice: origPriceVal,
               image: p.image || p.images?.[0] || '/prod_overshirt_1778670536589.png',
@@ -486,7 +486,7 @@ function ProductContent() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: selectedProduct?.name || 'JudesCart Product',
+        title: selectedProduct?.name || 'Karteevo Product',
         url: window.location.href,
       }).catch(() => {});
     } else {
@@ -774,12 +774,12 @@ function ProductContent() {
                   </p>
                 </div>
 
-                {/* JUDESCART LUCKY DRAW REWARDS CARD */}
+                {/* KARTEEVO LUCKY DRAW REWARDS CARD */}
                 <div className="p-4 rounded-2xl bg-[#FEF8EE] border border-[#DF9F28]/30 shadow-xs space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-xs font-black text-[#111111] uppercase tracking-wider">
                       <Trophy className="w-4 h-4 text-[#DF9F28]" />
-                      <span>JudesCart Lucky Draw Rewards</span>
+                      <span>Karteevo Lucky Draw Rewards</span>
                     </div>
                     <Link href="/lucky-draw" className="text-[11px] font-bold text-[#DF9F28] hover:text-[#C6891E] hover:underline">
                       Draw Rules &amp; Schedule →
@@ -1286,7 +1286,7 @@ function ProductContent() {
                       name={prod.name}
                       description={prod.description}
                       category={prod.category}
-                      brand={prod.brand || 'JudesCart'}
+                      brand={prod.brand || 'Karteevo'}
                       price={prod.price}
                       originalPrice={prod.originalPrice}
                       image={prod.image}
@@ -1348,7 +1348,7 @@ function ProductContent() {
             {/* Catalog Header */}
             <div className="space-y-1">
               <span className="text-xs font-bold tracking-[0.2em] text-[#DF9F28] uppercase">
-                JudesCart Catalog
+                Karteevo Catalog
               </span>
               <h1 className="text-xl sm:text-2xl font-sans font-extrabold text-[#111111] tracking-tight">
                 All Collections &amp; Apparel
@@ -1539,7 +1539,7 @@ function ProductContent() {
                         name={prod.name}
                         description={prod.description}
                         category={prod.category}
-                        brand={prod.brand || 'JudesCart'}
+                        brand={prod.brand || 'Karteevo'}
                         price={prod.price}
                         originalPrice={prod.originalPrice}
                         image={prod.image}

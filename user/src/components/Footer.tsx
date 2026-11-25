@@ -227,7 +227,7 @@ export default function Footer() {
         {/* Bottom Bar: Copyright, Legal Links & Payment Badges */}
         <div className="mt-6 sm:mt-12 pt-4 sm:pt-6 border-t border-[#061B3A] flex flex-col md:flex-row items-center justify-between gap-2 sm:gap-4 text-[11px] sm:text-[13px] text-slate-300">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <p>© {new Date().getFullYear()} JudesCart. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} Karteevo. All rights reserved.</p>
             <span className="hidden sm:inline text-slate-500">•</span>
             <Link href="/privacy" className="hover:text-[#DF9F28] transition-colors min-h-[36px] sm:min-h-[44px] inline-flex items-center">Privacy Policy</Link>
             <span className="text-slate-500">•</span>

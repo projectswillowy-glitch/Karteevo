@@ -32,12 +32,14 @@ dotenv.config();
 
 const app = express();
 app.set('trust proxy', 1);
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT) || 5000;
 
 const allowedOrigins = [
     process.env.FRONTEND_URL || 'http://localhost:3000',
     'https://www.karteevo.com',
     'https://karteevo.com',
+    'https://karteevoadmin.vercel.app',
+    'https://karteevo.vercel.app',
     'https://judescart-admin.vercel.app',
     'https://judescart-feg8.vercel.app',
     'https://judescart-ammi.vercel.app',
@@ -91,7 +93,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get(['/', '/api', '/health', '/api/health'], (req, res) => {
     res.json({
         status: 'ok',
-        service: 'JudesCart API',
+        service: 'Karteevo API',
         environment: process.env.NODE_ENV || 'production',
         timestamp: new Date().toISOString()
     });

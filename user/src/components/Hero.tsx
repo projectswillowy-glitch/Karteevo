@@ -63,7 +63,7 @@ function HeroSkeleton() {
     <section aria-label="Loading promotional banners" className="sj-container pt-3 sm:pt-5 md:pt-12 pb-0 select-none">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 lg:gap-6 items-stretch">
         {/* Main Banner Skeleton */}
-        <div className="w-full lg:col-span-8 xl:col-span-8 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#061B3A] via-[#0A192F] to-[#061B3A] border border-slate-800/80 p-6 sm:p-9 md:p-11 flex flex-col justify-between h-[340px] xs:h-[370px] sm:h-[400px] md:h-[420px] lg:h-[440px] xl:h-[460px] relative animate-pulse shadow-sm">
+        <div className="w-full lg:col-span-8 xl:col-span-8 rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#061B3A] via-[#0A192F] to-[#061B3A] border border-slate-800/80 p-5 sm:p-7 md:p-9 flex flex-col justify-between aspect-[1920/800] min-h-[300px] sm:min-h-[260px] max-h-[460px] relative animate-pulse shadow-sm">
           <div className="space-y-3 sm:space-y-4 max-w-lg">
             {/* Tag badge */}
             <div className="h-5 w-32 bg-amber-500/20 border border-amber-500/30 rounded-md" />
@@ -84,7 +84,6 @@ function HeroSkeleton() {
           {/* CTA Button Skeleton */}
           <div className="pt-2 flex flex-col items-start gap-2">
             <div className="h-11 w-40 sm:w-48 bg-amber-500/40 rounded-lg" />
-            <div className="h-3 w-56 bg-slate-700/40 rounded" />
           </div>
         </div>
 
@@ -262,7 +261,7 @@ export default function Hero() {
             SPOT 1: LARGE MAIN CAMPAIGN BANNER
            ========================================================================= */}
         <div
-          className={`w-full ${hasMultiple ? 'lg:col-span-8 xl:col-span-8' : 'lg:col-span-12 xl:col-span-12'} relative rounded-xl sm:rounded-2xl overflow-hidden bg-[#0A192F] border border-[#E2E8F0] shadow-sm transition-all duration-300 group flex flex-col justify-between aspect-[1920/800] min-h-[260px] max-h-[460px]`}
+          className={`w-full ${hasMultiple ? 'lg:col-span-8 xl:col-span-8' : 'lg:col-span-12 xl:col-span-12'} relative rounded-xl sm:rounded-2xl overflow-hidden bg-[#0A192F] border border-[#E2E8F0] shadow-sm transition-all duration-300 group flex flex-col justify-between aspect-[1920/800] min-h-[300px] sm:min-h-[260px] max-h-[460px]`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={handleTouchStart}
@@ -327,7 +326,7 @@ export default function Hero() {
 
               {/* Midnight Navy Overlay Gradient (#061B3A) - Only when text is present */}
               {hasSpot1Text && (
-                <div className="absolute inset-0 bg-gradient-to-t from-[#061B3A]/95 via-[#061B3A]/70 to-[#061B3A]/30 sm:bg-gradient-to-r sm:from-[#061B3A]/90 sm:via-[#061B3A]/60 sm:to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#061B3A]/95 via-[#061B3A]/80 to-[#061B3A]/50 sm:bg-gradient-to-r sm:from-[#061B3A]/90 sm:via-[#061B3A]/60 sm:to-transparent pointer-events-none" />
               )}
 
               {/* Banner Text Content & CTA (Left-Aligned) */}
@@ -335,7 +334,7 @@ export default function Hero() {
                 <div className="relative z-10 p-5 sm:p-7 md:p-9 lg:p-11 flex flex-col justify-between h-full max-w-xl space-y-3 sm:space-y-4">
                   <div className="space-y-1.5 sm:space-y-2">
                     {spot1Banner.tag && (
-                      <span className="text-[13px] font-medium uppercase tracking-wider text-[#DF9F28] inline-block px-3 py-1 rounded-md bg-[#061B3A]/80 backdrop-blur-md border border-[#DF9F28]/30">
+                      <span className="text-[11px] sm:text-[13px] font-medium uppercase tracking-wider text-[#DF9F28] inline-block px-2.5 py-1 rounded-md bg-[#061B3A]/80 backdrop-blur-md border border-[#DF9F28]/30">
                         {spot1Banner.tag}
                       </span>
                     )}
@@ -353,7 +352,7 @@ export default function Hero() {
                     )}
 
                     {spot1Banner.description && (
-                      <p className="text-sm sm:text-base text-slate-200 font-normal leading-relaxed line-clamp-2 max-w-xs sm:max-w-md pt-0.5">
+                      <p className="text-[13px] sm:text-base text-slate-200 font-normal leading-relaxed line-clamp-3 sm:line-clamp-2 max-w-xs sm:max-w-md pt-0.5">
                         {spot1Banner.description}
                       </p>
                     )}

@@ -123,7 +123,7 @@ export default function AccountDrawer({
             {/* Guest Sign In Callout */}
             {!session?.user && (
               <div className="p-4 rounded-2xl bg-[#FEF8EE] border border-[#946000]/30">
-                <h4 className="text-sm font-bold text-[#111111]">Sign in to JudesCart</h4>
+                <h4 className="text-sm font-bold text-[#111111]">Sign in to Karteevo</h4>
                 <p className="text-[13px] text-[#334155] mt-1">
                   View your order history, delivery radar, & unlock 200 free coins.
                 </p>
@@ -152,12 +152,12 @@ export default function AccountDrawer({
               </div>
             )}
 
-            {/* JudesCoins & Lucky Rewards Card */}
+            {/* Karteevo Coins & Lucky Rewards Card */}
             <div className="p-5 rounded-2xl bg-[#0A192F] text-white relative overflow-hidden shadow-md border border-[#061B3A]">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Coins className="w-5 h-5 text-[#DF9F28]" />
-                  <span className="text-lg font-bold tracking-tight text-white">0 JudesCoins</span>
+                  <span className="text-lg font-bold tracking-tight text-white">0 Karteevo Coins</span>
                 </div>
                 <span className="text-[13px] uppercase font-bold text-[#DF9F28] bg-[#DF9F28]/20 px-2.5 py-0.5 rounded-full border border-[#DF9F28]/30">
                   Tier 1
@@ -356,7 +356,7 @@ export default function AccountDrawer({
                 className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Sign Out of JudesCart</span>
+                <span>Sign Out of Karteevo</span>
               </button>
             ) : (
               <button

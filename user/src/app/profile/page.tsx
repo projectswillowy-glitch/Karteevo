@@ -328,7 +328,7 @@ export default function ProfilePage() {
                   {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#111111]">{profileData.name || 'JudesCart Member'}</h3>
+                  <h3 className="text-base font-bold text-[#111111]">{profileData.name || 'Karteevo Member'}</h3>
                   <p className="text-xs text-[#555555]">{profileData.email}</p>
                 </div>
               </div>
@@ -467,7 +467,7 @@ export default function ProfilePage() {
               <div className="p-6 bg-[#FEF8EE] rounded-xl border border-[#DF9F28]/30 flex items-start gap-4">
                 <Ticket className="w-6 h-6 text-[#DF9F28] shrink-0 mt-1" />
                 <div className="space-y-1 text-xs text-[#111111]">
-                  <h4 className="font-bold text-sm">JudesCart Community Lucky Tickets</h4>
+                  <h4 className="font-bold text-sm">Karteevo Community Lucky Tickets</h4>
                   <p className="text-[#555555]">
                     Each ticket is tied to a verified order ID. Draw winners are selected in our live weekly campaigns and notified automatically.
                   </p>

@@ -34,7 +34,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">1. Acceptance of Terms</h2>
               <p>
-                By accessing or placing an order on JudesCart (&quot;the Platform&quot;), you acknowledge that you have read, understood, and agreed to be legally bound by these Terms of Service.
+                By accessing or placing an order on Karteevo (&quot;the Platform&quot;), you acknowledge that you have read, understood, and agreed to be legally bound by these Terms of Service.
               </p>
             </section>
 
@@ -48,7 +48,7 @@ export default function TermsPage() {
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">3. Weekly Lucky Draw & Rewards</h2>
               <p>
-                Participation in the JudesCart Weekly Lucky Draw is automatic with eligible purchases. Lucky tickets are generated digitally and tied to specific verified orders. The draw results are audited and transparently published every Sunday at 8:00 PM IST.
+                Participation in the Karteevo Weekly Lucky Draw is automatic with eligible purchases. Lucky tickets are generated digitally and tied to specific verified orders. The draw results are audited and transparently published every Sunday at 8:00 PM IST.
               </p>
             </section>
 

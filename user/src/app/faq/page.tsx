@@ -29,12 +29,12 @@ const FAQ_ITEMS = [
   {
     category: 'Lucky Draw & Rewards',
     question: 'How does the Weekly Lucky Draw work?',
-    answer: 'Every verified order placed on JudesCart automatically generates an official digital lucky ticket linked to your profile and order number. Winners are drawn live every week using a verifiable random protocol.',
+    answer: 'Every verified order placed on Karteevo automatically generates an official digital lucky ticket linked to your profile and order number. Winners are drawn live every week using a verifiable random protocol.',
   },
   {
     category: 'Lucky Draw & Rewards',
     question: 'Are there any extra fees if I win a prize?',
-    answer: 'No. All lucky draw prizes are delivered completely free of charge with all shipping and gift taxes covered by JudesCart as a gesture of appreciation.',
+    answer: 'No. All lucky draw prizes are delivered completely free of charge with all shipping and gift taxes covered by Karteevo as a gesture of appreciation.',
   },
 ];
 
@@ -132,7 +132,7 @@ export default function FAQPage() {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2 text-xs">
               <span className="flex items-center gap-1.5 text-slate-200">
                 <Mail className="w-4 h-4 text-[#DF9F28]" />
-                <span>support@judescart.com</span>
+                <span>support@karteevo.com</span>
               </span>
               <span className="text-slate-600">•</span>
               <span className="flex items-center gap-1.5 text-slate-200">

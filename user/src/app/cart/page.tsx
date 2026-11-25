@@ -271,7 +271,7 @@ export default function CartPage() {
         key: keyId,
         amount: amount,
         currency: currency,
-        name: 'JUDESCART',
+        name: 'KARTEEVO',
         description: 'Order Payment',
         order_id: orderId,
         prefill: {

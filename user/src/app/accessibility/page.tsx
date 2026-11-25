@@ -34,7 +34,7 @@ export default function AccessibilityPage() {
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">Our Commitment</h2>
               <p>
-                JudesCart is dedicated to ensuring digital accessibility for people with disabilities. We continually improve the user experience for everyone, applying the relevant accessibility standards defined by the Web Content Accessibility Guidelines (WCAG 2.1 AA).
+                Karteevo is dedicated to ensuring digital accessibility for people with disabilities. We continually improve the user experience for everyone, applying the relevant accessibility standards defined by the Web Content Accessibility Guidelines (WCAG 2.1 AA).
               </p>
             </section>
 
@@ -51,7 +51,7 @@ export default function AccessibilityPage() {
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">Feedback & Assistance</h2>
               <p>
-                We welcome your feedback on the accessibility of JudesCart. If you encounter any barriers, please let our team know at <a href="mailto:accessibility@judescart.com" className="text-[#DF9F28] font-bold hover:text-[#C6891E] underline">accessibility@judescart.com</a> or via our <Link href="/contact" className="text-[#DF9F28] font-bold hover:text-[#C6891E] underline">Customer Support</Link> page.
+                We welcome your feedback on the accessibility of Karteevo. If you encounter any barriers, please let our team know at <a href="mailto:accessibility@karteevo.com" className="text-[#DF9F28] font-bold hover:text-[#C6891E] underline">accessibility@karteevo.com</a> or via our <Link href="/contact" className="text-[#DF9F28] font-bold hover:text-[#C6891E] underline">Customer Support</Link> page.
               </p>
             </section>
           </div>

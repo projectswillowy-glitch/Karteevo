@@ -84,7 +84,7 @@ export default function AuthModal({
         if (error) {
           setErrorMessage(error.message || 'Failed to create account.');
         } else {
-          setSuccessMessage('Welcome to JudesCart! You earned 200 JudesCoins.');
+          setSuccessMessage('Welcome to Karteevo! You earned 200 Karteevo Coins.');
           setTimeout(() => {
             onClose();
             router.refresh();
@@ -153,10 +153,10 @@ export default function AuthModal({
             </div>
             <div>
               <p className="text-[13px] font-bold uppercase tracking-wider text-[#946000]">
-                JudesCart Membership
+                Karteevo Membership
               </p>
               <h2 className="text-lg font-bold text-[#111111] tracking-tight">
-                {mode === 'signin' ? 'Customer Sign In' : 'Join JudesCart VIP'}
+                {mode === 'signin' ? 'Customer Sign In' : 'Join Karteevo VIP'}
               </h2>
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function AuthModal({
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : mode === 'signin' ? (
-              'Sign In to JudesCart'
+              'Sign In to Karteevo'
             ) : (
               'Create Account (+200 Coins)'
             )}
@@ -360,7 +360,7 @@ export default function AuthModal({
             <ShieldCheck className="w-4 h-4 text-emerald-700" />
             <span>256-bit Encrypted Session</span>
           </div>
-          <span>Official JudesCart Security</span>
+          <span>Official Karteevo Security</span>
         </div>
 
       </div>

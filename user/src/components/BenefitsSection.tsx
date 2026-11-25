@@ -22,10 +22,10 @@ interface BrandBenefitCMS {
 }
 
 const DEFAULT_BENEFITS: BrandBenefitCMS = {
-  tag: 'The JudesCart Standard',
+  tag: 'The Karteevo Standard',
   title: 'Bespoke Quality. Master Craftsmanship. Timeless Style.',
   description:
-    'At JudesCart, every garment, fine leather good, and bespoke accessory is created with unyielding dedication to material excellence, tailored comfort, and verifiable authenticity.',
+    'At Karteevo, every garment, fine leather good, and bespoke accessory is created with unyielding dedication to material excellence, tailored comfort, and verifiable authenticity.',
   benefit1Title: 'Atelier Guarantee',
   benefit1Desc: 'Comprehensive 1-year warranty on all apparel, leathers, and accessories.',
   benefit2Title: 'Carbon-Neutral Dispatch',
@@ -78,37 +78,37 @@ export default function BenefitsSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
           
           {/* Left Text & Value Props */}
-          <div className="lg:col-span-7 p-3.5 sm:p-8 lg:p-12 flex flex-col justify-center space-y-2.5 sm:space-y-5">
-            <div className="inline-flex items-center gap-1 text-[10px] sm:text-[13px] uppercase tracking-wider font-bold text-[#946000]">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-[#946000]" />
+          <div className="lg:col-span-7 p-4 sm:p-8 lg:p-12 flex flex-col justify-center space-y-3 sm:space-y-5">
+            <div className="inline-flex items-center gap-1.5 text-[11px] sm:text-[13px] uppercase tracking-wider font-bold text-[#946000]">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#946000]" />
               <span>{tag}</span>
             </div>
 
-            <h2 className="text-base sm:text-2xl lg:text-3xl font-bold leading-snug text-[#111111] tracking-tight">
+            <h2 className="text-lg sm:text-2xl lg:text-3xl font-bold leading-snug text-[#111111] tracking-tight">
               {title}
             </h2>
 
-            <p className="text-[11px] sm:text-base text-[#334155] leading-relaxed font-normal max-w-xl line-clamp-3 sm:line-clamp-none">
+            <p className="text-[13px] sm:text-base text-[#334155] leading-relaxed font-normal max-w-xl">
               {description}
             </p>
 
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 pt-2 sm:pt-4 border-t border-[#F1F5F9] text-[#334155]">
-              <div className="p-2.5 sm:p-4 rounded-lg sm:rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <h4 className="font-bold text-[#111111] uppercase tracking-wide text-[10px] sm:text-[15px] flex items-center gap-1 sm:gap-2">
-                  <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-[#946000] shrink-0" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4 pt-3 sm:pt-4 border-t border-[#F1F5F9] text-[#334155]">
+              <div className="p-3.5 sm:p-4 rounded-lg sm:rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <h4 className="font-bold text-[#111111] uppercase tracking-wide text-[11px] sm:text-[15px] flex items-center gap-1.5 sm:gap-2">
+                  <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#946000] shrink-0" />
                   <span className="leading-tight">{benefit1Title}</span>
                 </h4>
-                <p className="text-[10px] sm:text-sm text-[#334155] mt-1 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#334155] mt-1.5 leading-relaxed">
                   {benefit1Desc}
                 </p>
               </div>
 
-              <div className="p-2.5 sm:p-4 rounded-lg sm:rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                <h4 className="font-bold text-[#111111] uppercase tracking-wide text-[10px] sm:text-[15px] flex items-center gap-1 sm:gap-2">
-                  <Leaf className="w-3 h-3 sm:w-4 sm:h-4 text-[#946000] shrink-0" />
+              <div className="p-3.5 sm:p-4 rounded-lg sm:rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                <h4 className="font-bold text-[#111111] uppercase tracking-wide text-[11px] sm:text-[15px] flex items-center gap-1.5 sm:gap-2">
+                  <Leaf className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#946000] shrink-0" />
                   <span className="leading-tight">{benefit2Title}</span>
                 </h4>
-                <p className="text-[10px] sm:text-sm text-[#334155] mt-1 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#334155] mt-1.5 leading-relaxed">
                   {benefit2Desc}
                 </p>
               </div>
@@ -117,7 +117,7 @@ export default function BenefitsSection() {
             <div>
               <Link
                 href={buttonLink || '/product'}
-                className="inline-flex items-center gap-1.5 min-h-[36px] sm:min-h-[44px] text-[10px] sm:text-sm font-bold uppercase tracking-wider text-[#111111] hover:text-[#946000] transition-colors group focus-visible:outline-none"
+                className="inline-flex items-center gap-1.5 min-h-[44px] text-xs sm:text-sm font-bold uppercase tracking-wider text-[#111111] hover:text-[#946000] transition-colors group focus-visible:outline-none"
               >
                 <span>{buttonText}</span>
                 <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform text-[#946000]" />

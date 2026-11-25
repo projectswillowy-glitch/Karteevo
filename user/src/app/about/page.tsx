@@ -18,7 +18,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-radial from-[#DF9F28]/15 via-[#061B3A]/80 to-[#0A192F] pointer-events-none" />
           <div className="sj-container relative z-10 text-center max-w-3xl mx-auto space-y-4">
             <span className="inline-flex items-center text-xs font-bold tracking-[0.2em] text-[#DF9F28] uppercase">
-              <span>THE JUDESCART ATELIER</span>
+              <span>THE KARTEEVO ATELIER</span>
             </span>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-sans font-extrabold text-white tracking-tight">
               A Legacy of Sartorial Excellence
@@ -42,7 +42,7 @@ export default function AboutPage() {
                 </h2>
                 <div className="w-16 h-1 bg-[#DF9F28] rounded-full" />
                 <p className="text-xs sm:text-sm text-[#555555] leading-relaxed">
-                  Founded on the belief that garments are an intimate expression of individuality, JudesCart has redefined modern wardrobe essentials for over three decades. Our journey started with a deep devotion to pure natural fabrics, precise drafting, and the art of the perfect fit.
+                  Founded on the belief that garments are an intimate expression of individuality, Karteevo has redefined modern wardrobe essentials for over three decades. Our journey started with a deep devotion to pure natural fabrics, precise drafting, and the art of the perfect fit.
                 </p>
                 <p className="text-xs sm:text-sm text-[#555555] leading-relaxed">
                   Every creation is a collaboration between master artisans and discerning patrons. We source certified organic cottons, pure cashmere, and full-grain leathers, ensuring each stitch reflects endurance, tactile comfort, and effortless elegance.
@@ -52,7 +52,7 @@ export default function AboutPage() {
               <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-slate-100 shadow-xl border border-slate-200">
                 <Image
                   src="/cat_apparel_1778670103427.png"
-                  alt="JudesCart Tailoring Heritage"
+                  alt="Karteevo Tailoring Heritage"
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"

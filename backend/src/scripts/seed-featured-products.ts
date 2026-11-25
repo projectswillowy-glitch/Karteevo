@@ -5,13 +5,13 @@ const prisma = new PrismaClient();
 async function seed() {
   console.log('Seeding / updating featured customer favourite products in DB...');
 
-  // 1. Get or create JudesCart Brand
-  let judesBrand = await prisma.brand.findFirst({
-    where: { name: { in: ['JudesCart', 'Steve John Atelier', 'Steve John Craft'] } }
+  // 1. Get or create Karteevo Brand
+  let karteevoBrand = await prisma.brand.findFirst({
+    where: { name: { in: ['Karteevo', 'Steve John Atelier', 'Steve John Craft'] } }
   });
-  if (!judesBrand) {
-    judesBrand = await prisma.brand.create({
-      data: { name: 'JudesCart' }
+  if (!karteevoBrand) {
+    karteevoBrand = await prisma.brand.create({
+      data: { name: 'Karteevo' }
     });
   }
 
@@ -53,7 +53,7 @@ async function seed() {
     catMap[c.name] = cat.id;
   }
 
-  // 4. Create premium JudesCart signature products if they don't exist
+  // 4. Create premium Karteevo signature products if they don't exist
   const signatureProducts = [
     {
       name: 'Utility Wool Blend Overshirt',
@@ -116,7 +116,7 @@ async function seed() {
           description: sp.description,
           image: sp.image,
           categoryId: catMap[sp.categoryName],
-          brandId: judesBrand.id,
+          brandId: karteevoBrand.id,
           isCustomerFavorite: sp.isCustomerFavorite,
           isNewArrival: sp.isNewArrival,
           variants: {
@@ -125,7 +125,7 @@ async function seed() {
                 price: sp.price,
                 offerPrice: sp.offerPrice,
                 qty: 50,
-                sku: `JUDES-${sp.name.slice(0, 4).toUpperCase()}-${Date.now().toString().slice(-4)}`,
+                sku: `KARTEEVO-${sp.name.slice(0, 4).toUpperCase()}-${Date.now().toString().slice(-4)}`,
                 images: [sp.image],
               }
             ]

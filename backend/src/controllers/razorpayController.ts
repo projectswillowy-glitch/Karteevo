@@ -3,6 +3,7 @@ import Razorpay from "razorpay";
 import crypto from "crypto";
 import { prisma } from "../lib/prisma.js";
 import { calculateCouponDiscount } from "./couponController.js";
+import { calculateShippingAmount } from "../lib/pricing.js";
 
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
 const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -37,7 +38,11 @@ function getGatewayErrorMessage(error: any) {
   );
 }
 
-async function calculateServerAmount(items: any[], couponCode?: string) {
+async function calculateServerAmount(
+  items: any[],
+  couponCode?: string,
+  shippingMethod?: string
+) {
   if (!Array.isArray(items) || items.length === 0) {
     throw new Error("Cart items are required");
   }
@@ -80,9 +85,13 @@ async function calculateServerAmount(items: any[], couponCode?: string) {
     finalAmount = subtotal - discountAmount;
   }
 
+  const shippingAmount = calculateShippingAmount(subtotal, shippingMethod);
+  finalAmount += shippingAmount;
+
   return {
     subtotal,
     discountAmount,
+    shippingAmount,
     finalAmount,
   };
 }
@@ -90,7 +99,7 @@ async function calculateServerAmount(items: any[], couponCode?: string) {
 // POST /api/payments/razorpay/create-order
 export const createRazorpayOrder = async (req: Request, res: Response) => {
   try {
-    const { items, couponCode } = req.body;
+    const { items, couponCode, shippingMethod } = req.body;
 
     if (!razorpayKeyId || !razorpayKeySecret) {
       return res.status(500).json({
@@ -99,7 +108,7 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
       });
     }
 
-    const amountData = await calculateServerAmount(items, couponCode);
+    const amountData = await calculateServerAmount(items, couponCode, shippingMethod);
 
     if (amountData.finalAmount <= 0) {
       return res.status(400).json({
@@ -138,6 +147,16 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
 
     return res.json({
       success: true,
+      data: {
+        orderId: razorpayOrder.id,
+        amount: razorpayOrder.amount, // paise, as Razorpay checkout expects
+        currency: razorpayOrder.currency,
+        keyId: razorpayKeyId,
+        total: amountData.finalAmount,
+        discountAmount: amountData.discountAmount,
+        shippingAmount: amountData.shippingAmount,
+      },
+      // Legacy flat fields kept for older clients
       keyId: razorpayKeyId,
       order: razorpayOrder,
       amount: amountData.finalAmount,

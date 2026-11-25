@@ -28,7 +28,7 @@ export default function DailyGiftModal({ isOpen, onClose }: DailyGiftModalProps)
   useEffect(() => {
     try {
       const today = new Date().toDateString();
-      const lastClaimed = localStorage.getItem('judescart_last_daily_claim');
+      const lastClaimed = localStorage.getItem('karteevo_last_daily_claim') || localStorage.getItem('judescart_last_daily_claim');
       if (lastClaimed === today) {
         setClaimed(true);
       }
@@ -54,7 +54,7 @@ export default function DailyGiftModal({ isOpen, onClose }: DailyGiftModalProps)
       setIsOpening(false);
       setClaimed(true);
       try {
-        localStorage.setItem('judescart_last_daily_claim', new Date().toDateString());
+        localStorage.setItem('karteevo_last_daily_claim', new Date().toDateString());
         setStreakDays((s) => s + 1);
       } catch {}
     }, 1200);
@@ -91,7 +91,7 @@ export default function DailyGiftModal({ isOpen, onClose }: DailyGiftModalProps)
             Claim Your Daily Reward
           </h3>
           <p className="text-sm text-stone-200 max-w-xs mx-auto leading-relaxed">
-            Log in every 24 hours to collect free JudesCoins and automatic weekly lucky draw sweepstakes entries.
+            Log in every 24 hours to collect free Karteevo Coins and automatic weekly lucky draw sweepstakes entries.
           </p>
         </div>
 
@@ -160,7 +160,7 @@ export default function DailyGiftModal({ isOpen, onClose }: DailyGiftModalProps)
                 Today&apos;s Mystery Loot
               </span>
               <p className="text-sm text-stone-200">
-                Unlock 100 JudesCoins + 1 Official Weekly Sweepstakes Entry Ticket
+                Unlock 100 Karteevo Coins + 1 Official Weekly Sweepstakes Entry Ticket
               </p>
             </div>
           )}

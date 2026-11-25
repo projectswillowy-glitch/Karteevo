@@ -29,7 +29,7 @@ export default function PromoSection() {
               </h2>
 
               <p className="text-slate-200 text-base leading-relaxed">
-                JudesCart was founded on a commitment to sartorial excellence, premium textiles, and meticulous construction. Each piece is designed to seamlessly integrate into your personal wardrobe for years of timeless wear.
+                Karteevo was founded on a commitment to sartorial excellence, premium textiles, and meticulous construction. Each piece is designed to seamlessly integrate into your personal wardrobe for years of timeless wear.
               </p>
 
               <div className="space-y-3 pt-2">
@@ -65,7 +65,7 @@ export default function PromoSection() {
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-800 border border-slate-700/60 shadow-lg">
                     <Image
                       src="/cat_apparel_1778670103427.png"
-                      alt="JudesCart Tailored Apparel"
+                      alt="Karteevo Tailored Apparel"
                       fill
                       className="object-cover object-center hover:scale-105 transition-transform duration-700"
                     />
@@ -75,7 +75,7 @@ export default function PromoSection() {
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-800 border border-slate-700/60 shadow-lg">
                     <Image
                       src="/cat_leather_1778670351299.webp"
-                      alt="JudesCart Handcrafted Leather"
+                      alt="Karteevo Handcrafted Leather"
                       fill
                       className="object-cover object-center hover:scale-105 transition-transform duration-700"
                     />

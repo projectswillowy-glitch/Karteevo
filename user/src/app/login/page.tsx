@@ -56,7 +56,7 @@ export default function LoginPage() {
         if (error) {
           setErrorMessage(error.message || 'Failed to create account.');
         } else {
-          setSuccessMessage('Welcome to JudesCart! You received 200 JudesCoins.');
+          setSuccessMessage('Welcome to Karteevo! You received 200 Karteevo Coins.');
           setTimeout(() => {
             router.push('/');
             router.refresh();
@@ -118,7 +118,7 @@ export default function LoginPage() {
               />
             </div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#DF9F28]">
-              JudesCart Membership
+              Karteevo Membership
             </p>
             <h1 className="text-lg sm:text-xl font-black tracking-tight text-white mt-1">
               {mode === 'signin' ? 'Welcome Back' : 'Create VIP Account'}
@@ -126,7 +126,7 @@ export default function LoginPage() {
             <p className="text-xs text-slate-300 mt-1 max-w-xs mx-auto">
               {mode === 'signin'
                 ? 'Sign in to access your orders, saved bag, and weekly sweepstakes tickets.'
-                : 'Join millions of shoppers and receive 200 free JudesCoins today.'}
+                : 'Join millions of shoppers and receive 200 free Karteevo Coins today.'}
             </p>
           </div>
 
@@ -277,7 +277,7 @@ export default function LoginPage() {
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : mode === 'signin' ? (
-                'Sign In to JudesCart'
+                'Sign In to Karteevo'
               ) : (
                 'Create Account (+200 Coins)'
               )}
@@ -319,7 +319,7 @@ export default function LoginPage() {
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
             <span>256-bit Encrypted Session</span>
           </div>
-          <span>Official JudesCart Security</span>
+          <span>Official Karteevo Security</span>
         </div>
 
       </div>

@@ -43,7 +43,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Load from localStorage on mount (for offline/guest mode)
   useEffect(() => {
-    const storedCart = localStorage.getItem('judescart_cart') || localStorage.getItem('stevejon_cart');
+    const storedCart = localStorage.getItem('karteevo_cart') || localStorage.getItem('judescart_cart') || localStorage.getItem('stevejon_cart');
     if (storedCart) {
       try {
         setItems(JSON.parse(storedCart));
@@ -57,7 +57,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Save to localStorage on items change (only if not logged in, to prevent override)
   useEffect(() => {
     if (isInitialized && !session?.user) {
-      localStorage.setItem('judescart_cart', JSON.stringify(items));
+      localStorage.setItem('karteevo_cart', JSON.stringify(items));
     }
   }, [items, isInitialized, session]);
 
@@ -68,7 +68,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const syncAndFetchCart = async () => {
       if (session?.user) {
         try {
-          const storedCart = localStorage.getItem('judescart_cart') || localStorage.getItem('stevejon_cart');
+          const storedCart = localStorage.getItem('karteevo_cart') || localStorage.getItem('judescart_cart') || localStorage.getItem('stevejon_cart');
           const localItems = storedCart ? JSON.parse(storedCart) : [];
 
           if (localItems.length > 0) {
@@ -79,7 +79,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               body: JSON.stringify({ items: localItems }),
               credentials: 'include'
             });
-            localStorage.removeItem('judescart_cart');
+            localStorage.removeItem('karteevo_cart');
             localStorage.removeItem('stevejon_cart');
           }
 
@@ -96,7 +96,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
       } else {
         // User logged out, restore local cart
-        const storedCart = localStorage.getItem('judescart_cart') || localStorage.getItem('stevejon_cart');
+        const storedCart = localStorage.getItem('karteevo_cart') || localStorage.getItem('judescart_cart') || localStorage.getItem('stevejon_cart');
         if (storedCart) {
           try {
             setItems(JSON.parse(storedCart));
@@ -117,7 +117,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = async (newItem: any, addedQty: number = 1) => {
     const qty = typeof newItem.quantity === 'number' ? newItem.quantity : addedQty;
-    const title = newItem.title || newItem.name || 'JudesCart Item';
+    const title = newItem.title || newItem.name || 'Karteevo Item';
     const productId = newItem.productId || newItem.id || String(Date.now());
     const size = newItem.size || 'M';
     const color = newItem.color || 'Standard';

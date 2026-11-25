@@ -109,7 +109,7 @@ export default function LuckyDrawPage() {
   const activeCampaign = campaigns.find((c) => c.status === 'ACTIVE') || {
     id: 'default',
     name: 'Weekly Grand Lucky Draw Campaign',
-    prizeName: 'JudesCart Signature Cashmere Suit & Duffle',
+    prizeName: 'Karteevo Signature Cashmere Suit & Duffle',
     prizeImage: '/prod_overshirt_1778670536589.png',
     startDate: new Date().toISOString(),
     endDate: new Date(Date.now() + 86400000 * 4).toISOString(),
@@ -140,14 +140,14 @@ export default function LuckyDrawPage() {
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-sans font-extrabold text-white tracking-tight leading-tight">
-                  The JudesCart <br />
+                  The Karteevo <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#DF9F28] via-amber-200 to-white">
                     Weekly Grand Draw
                   </span>
                 </h1>
 
                 <p className="text-slate-300 text-xs sm:text-sm md:text-base leading-relaxed max-w-xl">
-                  Every order placed on JudesCart automatically enters our weekly verified prize draw. Win signature bespoke garments, handcrafted leather goods, and exclusive gift rewards.
+                  Every order placed on Karteevo automatically enters our weekly verified prize draw. Win signature bespoke garments, handcrafted leather goods, and exclusive gift rewards.
                 </p>
 
                 {/* Live Countdown Timer */}
@@ -228,7 +228,7 @@ export default function LuckyDrawPage() {
                     </h3>
                     <div className="flex items-center gap-2 text-xs text-emerald-400 pt-1">
                       <ShieldCheck className="w-4 h-4" />
-                      <span>Verified JudesCart Authentic Gift</span>
+                      <span>Verified Karteevo Authentic Gift</span>
                     </div>
                   </div>
                 </div>
@@ -252,7 +252,7 @@ export default function LuckyDrawPage() {
                 How It Works
               </h2>
               <p className="text-xs sm:text-sm text-[#555555]">
-                Participating in JudesCart lucky draw campaigns takes zero extra effort.
+                Participating in Karteevo lucky draw campaigns takes zero extra effort.
               </p>
             </div>
 
@@ -384,7 +384,7 @@ export default function LuckyDrawPage() {
                   Past Draw Winners
                 </h2>
                 <p className="text-xs sm:text-sm text-[#555555]">
-                  Real customers who took home signature JudesCart prizes.
+                  Real customers who took home signature Karteevo prizes.
                 </p>
               </div>
 

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { prisma as prismaClient } from '../lib/prisma.js';
 import { orderStatusSchema } from '../schemas/order-schema.js';
 import { calculateCouponDiscount } from './couponController.js';
+import { calculateShippingAmount } from '../lib/pricing.js';
 import { sendOrderEmails } from '../lib/mailer.js';
 import { logActivity } from '../lib/activityLogger.js';
 
@@ -267,6 +268,7 @@ export const createOrder = async (req: Request, res: Response) => {
             paymentMethod,
             items,
             couponCode,
+            shippingMethod,
             razorpayOrderId,
             razorpayPaymentId,
             razorpaySignature,
@@ -364,6 +366,9 @@ export const createOrder = async (req: Request, res: Response) => {
                             throw new Error(`Coupon error: ${err.message}`);
                         }
                     }
+
+                    // Shipping must be added before the paid-amount comparison below.
+                    finalAmount += calculateShippingAmount(subtotal, shippingMethod);
 
                     if (normalizedPaymentMethod === "RAZORPAY") {
                         const paidAmountPaise = Math.round(Number(verifiedPayment.amount) * 100);

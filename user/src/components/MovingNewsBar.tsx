@@ -10,7 +10,7 @@ export default function MovingNewsBar() {
       USE CODE: <strong>JCWELCOME15</strong> FOR FLAT 15% OFF ON YOUR FIRST
       ORDER
     </>,
-    " JUDESCART ATELIER: BESPOKE PERSONALIZED TAILORING AVAILABLE NOW",
+    " KARTEEVO ATELIER: BESPOKE PERSONALIZED TAILORING AVAILABLE NOW",
   ];
   return (
     <div className="w-full bg-[#021631] text-white py-3 text-[13px] md:text-sm tracking-[0.12em] font-sans font-semibold uppercase overflow-hidden border-y border-white/10 flex select-none relative z-30">

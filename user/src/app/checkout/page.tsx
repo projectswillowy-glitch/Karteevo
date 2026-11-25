@@ -40,6 +40,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [orderId, setOrderId] = useState('');
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: session?.user?.name || '',
@@ -98,43 +99,184 @@ export default function CheckoutPage() {
     setCouponError(null);
   };
 
+  const loadRazorpayScript = () =>
+    new Promise<boolean>((resolve) => {
+      if (typeof window === 'undefined') return resolve(false);
+      if ((window as any).Razorpay) return resolve(true);
+
+      const existing = document.querySelector(
+        'script[src="https://checkout.razorpay.com/v1/checkout.js"]'
+      );
+      if (existing) {
+        existing.addEventListener('load', () => resolve(true));
+        existing.addEventListener('error', () => resolve(false));
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+  const createFinalOrder = async (
+    method: 'COD' | 'RAZORPAY',
+    paymentDetails?: {
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      razorpaySignature?: string;
+    }
+  ) => {
+    const response = await fetch(`${apiUrl}/orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        items: items.map((item) => ({
+          variantId: item.variantId,
+          quantity: item.quantity,
+        })),
+        shippingDetails: {
+          name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          street: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+        },
+        paymentMethod: method,
+        couponCode: appliedCoupon?.code,
+        shippingMethod,
+        ...paymentDetails,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to place order. Please try again.');
+    }
+
+    return result.data;
+  };
+
+  const completeOrder = (serverOrderId?: string) => {
+    setOrderId(serverOrderId || `JC-${Math.floor(100000 + Math.random() * 900000)}`);
+    clearCart();
+    setIsCompleted(true);
+  };
+
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.phone || !formData.address || !formData.pincode) {
-      alert('Please fill in all required shipping address fields.');
-      return;
+    setCheckoutError(null);
+
+    if (!formData.fullName.trim()) return setCheckoutError('Please enter your full name.');
+    if (!formData.phone.trim()) return setCheckoutError('Please enter a contact phone number.');
+    if (!formData.address.trim()) return setCheckoutError('Please enter a street address.');
+    if (!formData.city.trim()) return setCheckoutError('Please enter your city.');
+    if (!formData.state.trim()) return setCheckoutError('Please enter your state.');
+    if (!formData.pincode.trim()) return setCheckoutError('Please enter your postal/ZIP code.');
+    if (items.length === 0) return setCheckoutError('Your cart is empty.');
+
+    const invalidItem = items.find((item) => !item.variantId);
+    if (invalidItem) {
+      return setCheckoutError(`"${invalidItem.title}" is no longer available. Please re-add it to your cart.`);
     }
 
     setIsSubmitting(true);
-    const generatedOrderId = `JC-${Math.floor(100000 + Math.random() * 900000)}`;
 
     try {
-      // Send to backend order API if reachable
-      await fetch(`${apiUrl}/orders`, {
+      if (paymentMethod === 'COD') {
+        const order = await createFinalOrder('COD');
+        completeOrder(order?.id);
+        return;
+      }
+
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Razorpay SDK failed to load. Please check your connection and retry.');
+      }
+
+      const orderResponse = await fetch(`${apiUrl}/payments/razorpay/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          orderId: generatedOrderId,
-          items: items.map(item => ({
-            variantId: item.variantId || item.id,
+          items: items.map((item) => ({
+            variantId: item.variantId,
             quantity: item.quantity,
-            price: item.price
           })),
-          total: finalTotal,
-          couponCode: appliedCoupon?.code || undefined,
-          shippingAddress: formData,
-          paymentMethod,
+          couponCode: appliedCoupon?.code,
+          shippingMethod,
         }),
-        credentials: 'include'
-      }).catch(() => null);
+      });
 
-      setOrderId(generatedOrderId);
-      clearCart();
-      setIsCompleted(true);
-    } catch (err) {
-      setOrderId(generatedOrderId);
-      clearCart();
-      setIsCompleted(true);
+      const orderData = await orderResponse.json().catch(() => ({}));
+      if (!orderResponse.ok || !orderData.success) {
+        throw new Error(orderData.error || 'Failed to initialize the payment gateway.');
+      }
+
+      const { orderId: razorpayOrderId, amount, currency, keyId } = orderData.data;
+
+      await new Promise<void>((resolve, reject) => {
+        const rzp = new (window as any).Razorpay({
+          key: keyId,
+          amount,
+          currency,
+          name: 'KARTEEVO',
+          description: 'Order Payment',
+          order_id: razorpayOrderId,
+          prefill: {
+            name: formData.fullName,
+            contact: formData.phone,
+            email: formData.email || session?.user?.email || '',
+          },
+          theme: { color: '#DF9F28' },
+          modal: {
+            ondismiss: () => reject(new Error('Payment cancelled. Your order was not placed.')),
+          },
+          handler: async (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) => {
+            try {
+              const verifyResponse = await fetch(`${apiUrl}/payments/razorpay/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              });
+
+              const verifyData = await verifyResponse.json().catch(() => ({}));
+              if (!verifyResponse.ok || !verifyData.success) {
+                throw new Error(verifyData.error || 'Payment signature verification failed.');
+              }
+
+              const order = await createFinalOrder('RAZORPAY', {
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+
+              completeOrder(order?.id);
+              resolve();
+            } catch (err: any) {
+              reject(err);
+            }
+          },
+        });
+
+        rzp.open();
+      });
+    } catch (err: any) {
+      setCheckoutError(err?.message || 'Failed to complete your order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +294,7 @@ export default function CheckoutPage() {
             Order Confirmed!
           </h1>
           <p className="text-stone-600 mb-6">
-            Thank you for shopping with JudesCart. Your order reference is{' '}
+            Thank you for shopping with Karteevo. Your order reference is{' '}
             <span className="font-mono font-bold text-slate-900">{orderId}</span>.
           </p>
 
@@ -522,6 +664,13 @@ export default function CheckoutPage() {
                 <Ticket className="w-4 h-4 text-[#DF9F28] shrink-0" />
                 <span>You will earn <span className="font-bold text-[#DF9F28]">{luckyDrawTickets || 1} Lucky Ticket(s)</span> with this order.</span>
               </div>
+
+              {/* Payment error feedback */}
+              {checkoutError && (
+                <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-[11px] font-semibold text-red-700 leading-relaxed">
+                  {checkoutError}
+                </div>
+              )}
 
               {/* Submit CTA */}
               <button

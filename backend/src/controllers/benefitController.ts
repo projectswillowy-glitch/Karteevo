@@ -5,9 +5,9 @@ import { uploadToCloudinary, safeDeleteImage } from '../lib/upload.js';
 const BENEFIT_TAG = 'BRAND_BENEFIT_CONFIG';
 
 const DEFAULT_BENEFITS = {
-  tag: 'The JudesCart Standard',
+  tag: 'The Karteevo Standard',
   title: 'Bespoke Quality. Master Craftsmanship. Timeless Style.',
-  description: 'At JudesCart, every garment, fine leather good, and bespoke accessory is created with unyielding dedication to material excellence, tailored comfort, and verifiable authenticity.',
+  description: 'At Karteevo, every garment, fine leather good, and bespoke accessory is created with unyielding dedication to material excellence, tailored comfort, and verifiable authenticity.',
   benefit1Title: 'Atelier Guarantee',
   benefit1Desc: 'Comprehensive 1-year warranty on all apparel, leathers, and accessories.',
   benefit2Title: 'Carbon-Neutral Dispatch',

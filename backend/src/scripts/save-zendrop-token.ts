@@ -11,7 +11,7 @@ async function saveZendropToken() {
     markupPercent: 35,
     markupType: 'PERCENTAGE',
     autoPublish: true,
-    defaultBrandName: 'Judes Collection',
+    defaultBrandName: 'Karteevo Collection',
     lastSyncedAt: new Date().toISOString(),
   };
 

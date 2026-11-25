@@ -12,8 +12,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "JudesCart | Shop More. Live Better. - All Products Superstore",
-  description: "Shop all products at JudesCart. Discover top-rated electronics, tech gear, premium apparel, footwear, leather goods, smart home essentials, and beauty items with transparent weekly lucky draw rewards.",
+  title: "Karteevo | Shop More. Live Better. - All Products Superstore",
+  description: "Shop all products at Karteevo. Discover top-rated electronics, tech gear, premium apparel, footwear, leather goods, smart home essentials, and beauty items with transparent weekly lucky draw rewards.",
   icons: {
     icon: "/logo-icon.webp",
   },

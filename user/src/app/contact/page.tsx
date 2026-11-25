@@ -81,7 +81,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-[#111111]">Email Support</p>
-                  <p className="text-xs text-[#555555] mt-0.5">concierge@judescart.com</p>
+                  <p className="text-xs text-[#555555] mt-0.5">concierge@karteevo.com</p>
                   <p className="text-[10px] text-[#888888]">Typical response under 2 hours</p>
                 </div>
               </div>
@@ -93,7 +93,7 @@ export default function ContactPage() {
                 <div>
                   <p className="text-xs font-bold text-[#111111]">Headquarters</p>
                   <p className="text-xs text-[#555555] mt-0.5">
-                    JudesCart Atelier Towers, Residency Road, Bengaluru, Karnataka 560025, India
+                    Karteevo Atelier Towers, Residency Road, Bengaluru, Karnataka 560025, India
                   </p>
                 </div>
               </div>

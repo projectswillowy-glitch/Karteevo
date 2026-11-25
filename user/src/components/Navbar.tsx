@@ -76,7 +76,7 @@ const NAVIGATION_CATEGORIES: NavCategory[] = [
     ],
     featured: {
       badge: 'Top Recommendation',
-      title: 'JudesCart Utility Wool Overshirt',
+      title: 'Karteevo Utility Wool Overshirt',
       description: 'Engineered from premium organic wool blend with clean sartorial drape.',
       price: '₹4,299',
       image: '/prod_overshirt_1778670536589.png',
@@ -489,7 +489,7 @@ export default function Navbar() {
               />
             </Link>
 
-            {/* Right: Wishlist & Cart Icons with Clean JudesCart Badges */}
+            {/* Right: Wishlist & Cart Icons with Clean Karteevo Badges */}
             <div className="flex items-center gap-1">
               {/* Wishlist Symbol */}
               <Link
@@ -1055,7 +1055,7 @@ export default function Navbar() {
                   className="flex items-center justify-center gap-2 w-full min-h-[44px] py-3 bg-[#0A192F] hover:bg-[#DF9F28] text-white hover:text-[#111111] rounded-xl text-sm font-bold tracking-wide transition-colors"
                 >
                   <User className="w-4 h-4" />
-                  <span>Sign In / Join JudesCart</span>
+                  <span>Sign In / Join Karteevo</span>
                 </Link>
               )}
             </div>

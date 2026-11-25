@@ -41,8 +41,8 @@ function pad(n: number) {
 
 const DEFAULT_CAMPAIGN: DrawCampaign = {
   id: 'default-active-draw',
-  name: 'Weekly JudesCart Luxury Sweepstakes',
-  prizeName: 'JudesCart Tailored Cashmere Coat & Artisan Duffle',
+  name: 'Weekly Karteevo Luxury Sweepstakes',
+  prizeName: 'Karteevo Tailored Cashmere Coat & Artisan Duffle',
   prizeImage: '/cat_leather_1778670351299.webp',
   startDate: new Date().toISOString(),
   endDate: new Date(Date.now() + 86400000 * 4 + 14 * 3600000 + 22 * 60000).toISOString(),
@@ -159,7 +159,7 @@ export default function LuckyDrawPoster() {
           
           {/* Left Text & Countdown */}
           <div className="lg:col-span-7 p-4 sm:p-8 lg:p-12 space-y-3 sm:space-y-5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-md bg-[#DF9F28]/20 border border-[#DF9F28]/40 text-[#DF9F28] text-xs sm:text-[13px] font-bold uppercase tracking-wider">
                 <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#DF9F28]" />
                 <span>Live Weekly Sweepstakes</span>
@@ -243,7 +243,7 @@ export default function LuckyDrawPoster() {
           </div>
 
           {/* Right Prize Image Showcase */}
-          <div className="lg:col-span-5 relative aspect-square lg:aspect-auto min-h-[200px] xs:min-h-[220px] sm:min-h-[280px] lg:h-full bg-[#061B3A] border-t lg:border-t-0 lg:border-l border-white/10 overflow-hidden">
+          <div className="lg:col-span-5 relative aspect-[4/3] sm:aspect-[16/9] lg:aspect-auto lg:min-h-[280px] lg:h-full bg-[#061B3A] border-t lg:border-t-0 lg:border-l border-white/10 overflow-hidden">
             <Image
               src={prizeImageSrc}
               alt={activeCampaign.prizeName || 'Featured Prize'}
@@ -257,7 +257,7 @@ export default function LuckyDrawPoster() {
                 <Gift className="w-3.5 h-3.5" />
                 <span>Featured Prize ({activeCampaign.winnerCount || 1} Winner{(activeCampaign.winnerCount || 1) > 1 ? 's' : ''})</span>
               </span>
-              <p className="font-bold text-xs sm:text-base text-white line-clamp-1 mt-0.5">
+              <p className="font-bold text-[13px] sm:text-base text-white line-clamp-2 mt-0.5">
                 {activeCampaign.prizeName}
               </p>
             </div>

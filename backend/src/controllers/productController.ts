@@ -505,6 +505,17 @@ export const getTrendingProducts = async (req: Request, res: Response) => {
     }
 };
 
+const isInlineImage = (src: unknown): src is string =>
+    typeof src === 'string' && src.startsWith('data:');
+
+// Cards reference images through getProductImage, so a listing never has to
+// transfer image bytes: legacy uploads are stored as base64 data URLs in Mongo
+// (~160 KB across three products) and pulling them made the list query slow.
+const cardImageUrl = (productId: string, galleryIndex?: number) =>
+    galleryIndex === undefined
+        ? `/api/products/${productId}/image`
+        : `/api/products/${productId}/image/${galleryIndex}`;
+
 // Card-grid projection: list endpoints only need what a product card renders.
 // Skipping variants -> options -> attribute joins keeps the list payload small
 // (the catalog JSON was ~68 KB per product with the full include).
@@ -512,8 +523,6 @@ const CARD_SELECT = {
     id: true,
     name: true,
     description: true,
-    image: true,
-    subimage: true,
     isCustomerFavorite: true,
     isNewArrival: true,
     createdAt: true,
@@ -675,14 +684,14 @@ export const getProducts = async (req: Request, res: Response) => {
             prisma.product.count({ where })
         ]);
 
-        // Card payloads drop inline base64 gallery images: they were the bulk of
-        // the 500 KB+ catalog response. Remote/relative URLs are kept.
+        // Card payloads only carry image URLs (see getProductImage). The first
+        // gallery entry drives the card hover image; the endpoint falls back to
+        // the main image when a product has no gallery.
         const products = req.query.fields === 'card'
             ? productsRaw.map((product: any) => ({
                   ...product,
-                  subimage: Array.isArray(product.subimage)
-                      ? product.subimage.filter((src: string) => typeof src === 'string' && !src.startsWith('data:'))
-                      : [],
+                  image: cardImageUrl(product.id),
+                  subimage: [cardImageUrl(product.id, 0)],
               }))
             : productsRaw;
 
@@ -700,6 +709,55 @@ export const getProducts = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Failed to fetch products:', error);
         res.status(500).json({ error: error?.message || "Failed to fetch products" });
+    }
+};
+
+// Serves a product's main image or a gallery image. Base64 data URLs stored in
+// Mongo are decoded to binary here; anything already hosted is redirected to.
+export const getProductImage = async (req: Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const indexParam = req.params.index;
+        const galleryIndex = indexParam === undefined ? undefined : Number(indexParam);
+
+        // Mongo ids are ObjectIds; a malformed id would throw inside Prisma.
+        if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const product = await prisma.product.findUnique({
+            where: { id },
+            select: { image: true, subimage: true },
+        });
+
+        if (!product) return res.status(404).json({ error: 'Product not found' });
+
+        let src: string | null | undefined;
+        if (galleryIndex === undefined) {
+            src = product.image;
+        } else if (Number.isInteger(galleryIndex) && galleryIndex >= 0) {
+            // Cards always ask for gallery image 0; fall back to the main image
+            // so products without a gallery keep rendering.
+            src = (product.subimage || [])[galleryIndex] || product.image;
+        }
+
+        if (!src) return res.status(404).json({ error: 'Image not found' });
+
+        if (!isInlineImage(src)) return res.redirect(src);
+
+        const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=]+)$/.exec(src);
+        if (!match) return res.status(415).json({ error: 'Unsupported image format' });
+
+        const [, mimeType, base64] = match;
+        const buffer = Buffer.from(base64, 'base64');
+
+        res.set('Content-Type', mimeType);
+        res.set('Content-Length', String(buffer.length));
+        res.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+        return res.send(buffer);
+    } catch (error: any) {
+        console.error('Failed to serve product image:', error);
+        res.status(500).json({ error: 'Failed to serve product image' });
     }
 };
 

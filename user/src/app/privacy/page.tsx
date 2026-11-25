@@ -34,7 +34,7 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">1. Overview & Commitment</h2>
               <p>
-                At JudesCart (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;), we are committed to safeguarding the privacy and personal data of our customers. This Privacy Policy details how we collect, process, protect, and handle your information across our website, mobile application, and concierge services.
+                At Karteevo (&quot;we&quot;, &quot;our&quot;, &quot;us&quot;), we are committed to safeguarding the privacy and personal data of our customers. This Privacy Policy details how we collect, process, protect, and handle your information across our website, mobile application, and concierge services.
               </p>
             </section>
 
@@ -58,14 +58,14 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">4. 256-Bit SSL Encryption</h2>
               <p>
-                All data transmitted between your browser and JudesCart is encrypted using industry-standard TLS 1.3 encryption protocols.
+                All data transmitted between your browser and Karteevo is encrypted using industry-standard TLS 1.3 encryption protocols.
               </p>
             </section>
 
             <section>
               <h2 className="text-base font-bold text-[#111111] mb-2">5. Contact Our Data Protection Officer</h2>
               <p>
-                If you have questions regarding your data or wish to request data erasure, please contact us at <a href="mailto:privacy@judescart.com" className="text-[#DF9F28] font-bold hover:text-[#C6891E] underline">privacy@judescart.com</a>.
+                If you have questions regarding your data or wish to request data erasure, please contact us at <a href="mailto:privacy@karteevo.com" className="text-[#DF9F28] font-bold hover:text-[#C6891E] underline">privacy@karteevo.com</a>.
               </p>
             </section>
           </div>

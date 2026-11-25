@@ -24,10 +24,10 @@ type Product = {
 const DEFAULT_RECOMMENDED: Product[] = [
   {
     id: 'rec-1',
-    name: 'JudesCart Utility Wool Overshirt',
+    name: 'Karteevo Utility Wool Overshirt',
     description: 'Fine spun merino wool overshirt with chest pockets and tailored seams.',
     category: 'Apparel',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     price: 4299,
     originalPrice: 5249,
     image: '/prod_overshirt_1778670536589.png',
@@ -40,7 +40,7 @@ const DEFAULT_RECOMMENDED: Product[] = [
     name: 'Bespoke Double-Breasted Wool Suit',
     description: 'Handcrafted master cut wool suit with Italian peak lapels.',
     category: 'Tailoring',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     price: 18999,
     originalPrice: 22499,
     image: '/cat_apparel_1778670103427.png',
@@ -53,7 +53,7 @@ const DEFAULT_RECOMMENDED: Product[] = [
     name: 'Heritage Full-Grain Leather Briefcase',
     description: 'Artisan vegetable-tanned leather briefcase with brass lock hardware.',
     category: 'Leather Goods',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     price: 8499,
     originalPrice: 10499,
     image: '/cat_leather_1778670351299.webp',
@@ -66,7 +66,7 @@ const DEFAULT_RECOMMENDED: Product[] = [
     name: 'Handcrafted Minimalist Bifold Wallet',
     description: 'Top grain burnished leather bifold with RFID blocking lining.',
     category: 'Accessories',
-    brand: 'JudesCart',
+    brand: 'Karteevo',
     price: 1999,
     originalPrice: 2499,
     image: '/cat_accessories_1778670517925.png',
@@ -121,7 +121,7 @@ export default function RecentlyViewed() {
     let isMounted = true;
     // 1. Try to load recently viewed from localStorage
     try {
-      const stored = localStorage.getItem('judescart_recently_viewed') || localStorage.getItem('stevejon_recently_viewed');
+      const stored = localStorage.getItem('karteevo_recently_viewed') || localStorage.getItem('judescart_recently_viewed') || localStorage.getItem('stevejon_recently_viewed');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -158,7 +158,7 @@ export default function RecentlyViewed() {
               name: p.name,
               description: p.description,
               category: p.category?.name || 'Apparel',
-              brand: p.brand?.name || 'JudesCart',
+              brand: p.brand?.name || 'Karteevo',
               price: priceVal,
               originalPrice: origPriceVal,
               image: p.image || p.images?.[0] || DEFAULT_RECOMMENDED[idx % DEFAULT_RECOMMENDED.length].image,
@@ -200,13 +200,13 @@ export default function RecentlyViewed() {
       <div className="space-y-4 sm:space-y-5">
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E2E8F0] pb-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 rounded-lg bg-[#FEF8EE] text-[#946000] border border-[#946000]/30">
+          <div className="flex items-start gap-2 sm:items-center sm:gap-3">
+            <div className="mt-0.5 p-1.5 sm:mt-0 sm:p-2 rounded-lg bg-[#FEF8EE] text-[#946000] border border-[#946000]/30 shrink-0">
               <History className="w-4 h-4 sm:w-5 sm:h-5 text-[#946000]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base sm:text-xl lg:text-2xl font-bold text-[#111111] tracking-tight">
+                <h3 className="text-[17px] sm:text-xl lg:text-2xl font-bold text-[#111111] tracking-tight">
                   Recently Viewed &amp; Recommended
                 </h3>
                 {hasRecent && (
@@ -240,7 +240,7 @@ export default function RecentlyViewed() {
               name={prod.name}
               description={prod.description}
               category={prod.category}
-              brand={prod.brand || 'JudesCart'}
+              brand={prod.brand || 'Karteevo'}
               price={prod.price}
               originalPrice={prod.originalPrice}
               image={prod.image}

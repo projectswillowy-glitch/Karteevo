@@ -32,7 +32,7 @@ export default function ProductCard({
   name,
   description,
   category = 'APPAREL',
-  brand = 'JudesCart',
+  brand = 'Karteevo',
   price,
   originalPrice,
   image,

@@ -44,10 +44,10 @@ interface BenefitData {
 }
 
 const DEFAULT_BENEFITS: BenefitData = {
-  tag: "The JudesCart Standard",
+  tag: "The Karteevo Standard",
   title: "Bespoke Quality. Master Craftsmanship. Timeless Style.",
   description:
-    "At JudesCart, every garment, fine leather good, and bespoke accessory is created with unyielding dedication to material excellence, tailored comfort, and verifiable authenticity.",
+    "At Karteevo, every garment, fine leather good, and bespoke accessory is created with unyielding dedication to material excellence, tailored comfort, and verifiable authenticity.",
   benefit1Title: "Atelier Guarantee",
   benefit1Desc:
     "Comprehensive 1-year warranty on all apparel, leathers, and accessories.",
@@ -201,7 +201,7 @@ export default function BrandBenefitsPage() {
                     <Input
                       value={formData.tag}
                       onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-                      placeholder="e.g. The JudesCart Standard"
+                      placeholder="e.g. The Karteevo Standard"
                     />
                   </div>
 

@@ -12,7 +12,7 @@ const REVIEWS = [
     tag: "Verified Buyer",
   },
   {
-    quote: "JudesCart has completely elevated my rotation. In addition to exquisite clothing, winning a leather duffle in the weekly lucky draw was an incredible bonus!",
+    quote: "Karteevo has completely elevated my rotation. In addition to exquisite clothing, winning a leather duffle in the weekly lucky draw was an incredible bonus!",
     author: "Marcus T.",
     location: "Bengaluru",
     rating: 5,

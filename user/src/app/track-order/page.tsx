@@ -32,16 +32,16 @@ function TrackOrderContent() {
     status: 'In Transit',
     estimatedDelivery: 'Thursday, Sept 18, 2026',
     carrier: 'BlueDart Express Air (Track #BD982341IN)',
-    origin: 'JudesCart Central Fulfilment Hub, Bengaluru',
+    origin: 'Karteevo Central Fulfilment Hub, Bengaluru',
     destination: 'Customer Delivery Hub, Mumbai',
     items: [
-      { name: 'JudesCart Utility Wool Overshirt (Size M)', qty: 1, price: '₹4,299' },
+      { name: 'Karteevo Utility Wool Overshirt (Size M)', qty: 1, price: '₹4,299' },
       { name: 'SonicPro Studio ANC Headphones (Matte Black)', qty: 1, price: '₹4,999' }
     ],
     timeline: [
       {
         title: 'Order Placed & Verified',
-        desc: 'Payment processed and verified by JudesCart Security.',
+        desc: 'Payment processed and verified by Karteevo Security.',
         time: 'Sept 15, 2026 - 10:30 AM',
         completed: true,
       },
@@ -104,7 +104,7 @@ function TrackOrderContent() {
             Track Your Consignment
           </h1>
           <p className="text-[#555555] text-xs sm:text-sm mt-2">
-            Real-time live milestone updates for your JudesCart orders & lucky tickets.
+            Real-time live milestone updates for your Karteevo orders & lucky tickets.
           </p>
         </div>
 

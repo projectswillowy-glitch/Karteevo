@@ -128,7 +128,6 @@ export default function ProductCard({
             src={cardImg || '/prod_overshirt_1778670536589.png'}
             alt={name}
             fill
-            unoptimized
             onError={() => setCardImg('/prod_overshirt_1778670536589.png')}
             sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 20vw"
             className="object-cover object-center group-hover:scale-[1.04] transition-transform duration-500 ease-out"

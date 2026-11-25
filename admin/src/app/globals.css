@@ -179,6 +179,24 @@
   /* Firefox */
 }
 
+/* Admin shell only: hide the scroll indicators of the sidebar nav and the page
+   scroll area, while tables, dialogs and selects keep their own scrollbars. */
+html,
+body {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+  width: 0;
+  height: 0;
+}
+
 @keyframes reveal {
   from {
     opacity: 0;

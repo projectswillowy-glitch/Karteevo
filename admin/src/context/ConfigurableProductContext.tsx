@@ -13,13 +13,27 @@ export interface BaseProductData {
   subCategoryId: string;
   isCustomerFavorite: boolean;
   isNewArrival: boolean;
+  sku: string;
+  purchasePrice: number;
+  purchasePriceInc: number;
+  margin: number;
+  sellingPriceInc: number;
+  taxRate: number;
+  taxType: "exclusive" | "inclusive";
+  skuFormat: "sku-number" | "sku-variation";
+  productType: "single" | "variable";
 }
 
 export interface VariantData {
   id: string;
+  sku?: string;
   price?: number;
   qty?: number;
   offerPrice?: number;
+  purchasePrice?: number;
+  purchasePriceInc?: number;
+  margin?: number;
+  sellingPriceInc?: number;
   images: File[];
   attributes: {
     attributeId: string;
@@ -63,6 +77,15 @@ export function ConfigurableProductProvider({
     subCategoryId: "",
     isCustomerFavorite: false,
     isNewArrival: false,
+    sku: "",
+    purchasePrice: 0,
+    purchasePriceInc: 0,
+    margin: 25,
+    sellingPriceInc: 0,
+    taxRate: 0,
+    taxType: "exclusive",
+    skuFormat: "sku-number",
+    productType: "single",
   });
 
   const updateBaseProduct = (data: Partial<BaseProductData>) => {
@@ -93,6 +116,15 @@ export function ConfigurableProductProvider({
       subCategoryId: "",
       isCustomerFavorite: false,
       isNewArrival: false,
+      sku: "",
+      purchasePrice: 0,
+      purchasePriceInc: 0,
+      margin: 25,
+      sellingPriceInc: 0,
+      taxRate: 0,
+      taxType: "exclusive",
+      skuFormat: "sku-number",
+      productType: "single",
     });
   };
 

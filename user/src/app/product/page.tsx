@@ -108,7 +108,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     image: '/prod_overshirt_1778670536589.png',
     subimage: [
       '/prod_overshirt_1778670536589.png',
-      '/cat_leather_1778670351299.png',
+      '/cat_leather_1778670351299.webp',
     ],
     description: 'Fine spun merino wool overshirt with reinforced twin chest pockets and tailored seams.',
     isNewArrival: true,
@@ -122,9 +122,9 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     name: 'Heritage Full-Grain Leather Briefcase',
     category: 'Leather Goods',
     brand: 'JudesCart',
-    image: '/cat_leather_1778670351299.png',
+    image: '/cat_leather_1778670351299.webp',
     subimage: [
-      '/cat_leather_1778670351299.png',
+      '/cat_leather_1778670351299.webp',
       '/about_craftsmanship.png',
     ],
     description: 'Artisan vegetable-tanned leather briefcase with solid brass lock hardware and padded laptop sleeve.',
@@ -142,7 +142,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     image: '/cat_accessories_1778670517925.png',
     subimage: [
       '/cat_accessories_1778670517925.png',
-      '/cat_leather_1778670351299.png',
+      '/cat_leather_1778670351299.webp',
     ],
     description: 'Top grain burnished leather bifold featuring RFID blocking protective weave and 8 card slots.',
     isNewArrival: true,
@@ -159,7 +159,7 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
     image: '/about_craftsmanship.png',
     subimage: [
       '/about_craftsmanship.png',
-      '/cat_leather_1778670351299.png',
+      '/cat_leather_1778670351299.webp',
     ],
     description: 'Spacious handcrafted weekend duffel crafted from full-grain pull-up leather with detachable shoulder strap.',
     isCustomerFavorite: true,

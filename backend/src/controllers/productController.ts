@@ -43,7 +43,11 @@ export const createProductWithVariants = async (req: Request, res: Response) => 
                             price: parseFloat(v.price),
                             qty: parseInt(v.qty),
                             offerPrice: v.offerPrice ? parseFloat(v.offerPrice) : null,
-                            sku: `${data.name.toUpperCase()}-${index}-${Date.now()}`, // Simple SKU generator
+                            purchasePrice: v.purchasePrice != null ? parseFloat(v.purchasePrice) : null,
+                            purchasePriceInc: v.purchasePriceInc != null ? parseFloat(v.purchasePriceInc) : null,
+                            margin: v.margin != null ? parseFloat(v.margin) : null,
+                            sellingPriceInc: v.sellingPriceInc != null ? parseFloat(v.sellingPriceInc) : null,
+                            sku: (v.sku && String(v.sku).trim()) || `${data.name.toUpperCase()}-${index}-${Date.now()}`,
                             images: imageUrls,
                             options: {
                                 create: v.attributes.map((attr: any) => ({
@@ -62,6 +66,9 @@ export const createProductWithVariants = async (req: Request, res: Response) => 
         res.status(201).json({ success: true, data: product });
     } catch (error: any) {
         console.error("Create product with variants error:", error);
+        if (error?.code === 'P2002') {
+            return res.status(400).json({ error: "A variant with this SKU already exists. Please use a different SKU." });
+        }
         res.status(500).json({ error: error.message || "Failed to create product" });
     }
 };
@@ -179,7 +186,11 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
                             price: parseFloat(v.price),
                             qty: parseInt(v.qty),
                             offerPrice: v.offerPrice ? parseFloat(v.offerPrice) : null,
-                            sku: `${data.name.toUpperCase()}-${i}-${Date.now()}`,
+                            purchasePrice: v.purchasePrice != null ? parseFloat(v.purchasePrice) : null,
+                            purchasePriceInc: v.purchasePriceInc != null ? parseFloat(v.purchasePriceInc) : null,
+                            margin: v.margin != null ? parseFloat(v.margin) : null,
+                            sellingPriceInc: v.sellingPriceInc != null ? parseFloat(v.sellingPriceInc) : null,
+                            sku: (v.sku && String(v.sku).trim()) || `${data.name.toUpperCase()}-${i}-${Date.now()}`,
                             images: finalImages,
                             options: {
                                 create: v.attributes.map((attr: any) => ({
@@ -189,7 +200,7 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
                             },
                         }
                     });
-                } else if (v.isModified || currentVariantNewFiles.length > 0 || (v.images && v.images.length !== finalImages.length)) {
+                } else if (v.isModified || v.purchasePrice !== undefined || v.margin !== undefined || currentVariantNewFiles.length > 0 || (v.images && v.images.length !== finalImages.length)) {
                     // Update existing
                     await tx.productVariant.update({
                         where: { id: variantId },
@@ -197,6 +208,11 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
                             price: parseFloat(v.price),
                             qty: parseInt(v.qty),
                             offerPrice: v.offerPrice ? parseFloat(v.offerPrice) : null,
+                            purchasePrice: v.purchasePrice != null ? parseFloat(v.purchasePrice) : null,
+                            purchasePriceInc: v.purchasePriceInc != null ? parseFloat(v.purchasePriceInc) : null,
+                            margin: v.margin != null ? parseFloat(v.margin) : null,
+                            sellingPriceInc: v.sellingPriceInc != null ? parseFloat(v.sellingPriceInc) : null,
+                            ...(v.sku && String(v.sku).trim() ? { sku: String(v.sku).trim() } : {}),
                             images: finalImages,
                             options: {
                                 deleteMany: {}, // Simplest way to update options
@@ -222,6 +238,9 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
         res.json({ success: true, data: updatedProduct });
     } catch (error: any) {
         console.error("Update product with variants error:", error);
+        if (error?.code === 'P2002') {
+            return res.status(400).json({ error: "A variant with this SKU already exists. Please use a different SKU." });
+        }
         res.status(500).json({ error: error.message || "Failed to update product" });
     }
 };
@@ -486,6 +505,24 @@ export const getTrendingProducts = async (req: Request, res: Response) => {
     }
 };
 
+// Card-grid projection: list endpoints only need what a product card renders.
+// Skipping variants -> options -> attribute joins keeps the list payload small
+// (the catalog JSON was ~68 KB per product with the full include).
+const CARD_SELECT = {
+    id: true,
+    name: true,
+    description: true,
+    image: true,
+    subimage: true,
+    isCustomerFavorite: true,
+    isNewArrival: true,
+    createdAt: true,
+    brand: { select: { id: true, name: true } },
+    category: { select: { id: true, name: true } },
+    subCategory: { select: { id: true, name: true } },
+    variants: { select: { id: true, price: true, offerPrice: true, sku: true, qty: true } },
+};
+
 export const getProducts = async (req: Request, res: Response) => {
     try {
         console.log("🚀 GET /api/products called with query:", req.query);
@@ -612,30 +649,42 @@ export const getProducts = async (req: Request, res: Response) => {
             if (field === 'created') orderBy = { createdAt: order };
         }
 
-        const [products, totalCount] = await Promise.all([
-            prisma.product.findMany({
-                where,
-                include: {
-                    brand: true,
-                    category: true,
-                    subCategory: true,
-                    variants: {
-                        include: {
-                            options: {
-                                include: {
-                                    attribute: true,
-                                    attributeValue: true,
-                                }
+        const findManyArgs: any = { where, orderBy, skip, take };
+        if (req.query.fields === 'card') {
+            findManyArgs.select = CARD_SELECT;
+        } else {
+            findManyArgs.include = {
+                brand: true,
+                category: true,
+                subCategory: true,
+                variants: {
+                    include: {
+                        options: {
+                            include: {
+                                attribute: true,
+                                attributeValue: true,
                             }
                         }
                     }
-                },
-                orderBy,
-                skip,
-                take,
-            }),
+                }
+            };
+        }
+
+        const [productsRaw, totalCount] = await Promise.all([
+            prisma.product.findMany(findManyArgs),
             prisma.product.count({ where })
         ]);
+
+        // Card payloads drop inline base64 gallery images: they were the bulk of
+        // the 500 KB+ catalog response. Remote/relative URLs are kept.
+        const products = req.query.fields === 'card'
+            ? productsRaw.map((product: any) => ({
+                  ...product,
+                  subimage: Array.isArray(product.subimage)
+                      ? product.subimage.filter((src: string) => typeof src === 'string' && !src.startsWith('data:'))
+                      : [],
+              }))
+            : productsRaw;
 
         res.json({
             data: products,

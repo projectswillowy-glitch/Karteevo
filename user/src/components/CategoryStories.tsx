@@ -30,7 +30,7 @@ const STORY_ITEMS: StoryItem[] = [
     id: 'leather-goods',
     title: 'Leather',
     href: '/product?category=Leather+Goods',
-    image: '/cat_leather_1778670351299.png',
+    image: '/cat_leather_1778670351299.webp',
   },
   {
     id: 'accessories',
@@ -42,7 +42,7 @@ const STORY_ITEMS: StoryItem[] = [
     id: 'atelier-suits',
     title: 'Tailored Suits',
     href: '/product?category=Apparel',
-    image: '/about_atelier.png',
+    image: '/about_atelier.webp',
   },
   {
     id: 'footwear',
@@ -84,6 +84,7 @@ export default function CategoryStories() {
                     alt={item.title}
                     fill
                     sizes="80px"
+                    loading={item.id === 'apparel' ? 'eager' : 'lazy'}
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 )}

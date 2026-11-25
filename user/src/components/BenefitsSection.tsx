@@ -32,7 +32,7 @@ const DEFAULT_BENEFITS: BrandBenefitCMS = {
   benefit2Desc: 'Every order is packaged sustainably and shipped with 100% carbon-neutral delivery.',
   buttonText: 'Explore the complete catalog',
   buttonLink: '/product',
-  image: '/about_atelier.png',
+  image: '/about_atelier.webp',
 };
 
 export default function BenefitsSection() {
@@ -70,7 +70,7 @@ export default function BenefitsSection() {
   const benefit2Desc = data.benefit2Desc || DEFAULT_BENEFITS.benefit2Desc;
   const buttonText = data.buttonText || DEFAULT_BENEFITS.buttonText;
   const buttonLink = data.buttonLink || DEFAULT_BENEFITS.buttonLink;
-  const imageSrc = (!imgError && data.image) ? data.image : '/about_atelier.png';
+  const imageSrc = (!imgError && data.image) ? data.image : '/about_atelier.webp';
 
   return (
     <section className="sj-container">
@@ -131,7 +131,6 @@ export default function BenefitsSection() {
               src={imageSrc}
               alt={title || 'Brand Craftsmanship Showcase'}
               fill
-              unoptimized
               onError={() => setImgError(true)}
               sizes="(max-width: 1024px) 100vw, 40vw"
               className="object-cover hover:scale-105 transition-transform duration-700"

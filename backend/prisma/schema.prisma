@@ -69,6 +69,10 @@ model ProductVariant {
   sku       String   @unique
   price     Float
   offerPrice Float?
+  purchasePrice    Float?
+  purchasePriceInc Float?
+  margin           Float?
+  sellingPriceInc  Float?
   qty       Int      @default(0)
   images    String[]
   createdAt DateTime @default(now())

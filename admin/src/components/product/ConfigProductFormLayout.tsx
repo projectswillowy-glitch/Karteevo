@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import ProductFormSection from "../AddProductForm";
-import ShopifyVariantsManager from "./ShopifyVariantsManager";
+import ProductVariationsSection from "./ProductVariationsSection";
 import ProductImageAndCategories from "./configurable-product";
 import { useRouter } from "next/navigation";
 import {
@@ -78,9 +78,14 @@ function ProductFormContent({}: ProductFormContentProps) {
       if (finalVariants.length === 0) {
         finalVariants = [{
           id: 'default-simple-variant',
+          sku: baseProduct.sku || undefined,
           qty: baseProduct.baseQuantity,
           price: baseProduct.basePrice,
           offerPrice: baseProduct.baseDiscountPrice || undefined,
+          purchasePrice: baseProduct.purchasePrice || undefined,
+          purchasePriceInc: baseProduct.purchasePriceInc || undefined,
+          margin: baseProduct.margin || undefined,
+          sellingPriceInc: baseProduct.sellingPriceInc || undefined,
           images: [],
           attributes: [],
         }];
@@ -134,6 +139,11 @@ function ProductFormContent({}: ProductFormContentProps) {
         price: v.price !== undefined && v.price !== null ? v.price : baseProduct.basePrice,
         qty: v.qty !== undefined && v.qty !== null ? v.qty : baseProduct.baseQuantity,
         offerPrice: v.offerPrice !== undefined && v.offerPrice !== null ? v.offerPrice : baseProduct.baseDiscountPrice,
+        sku: v.sku || undefined,
+        purchasePrice: v.purchasePrice,
+        purchasePriceInc: v.purchasePriceInc,
+        margin: v.margin,
+        sellingPriceInc: v.sellingPriceInc,
         attributes: v.attributes.map((a) => ({
           attributeId: a.attributeId,
           valueId: a.valueId,
@@ -199,26 +209,27 @@ function ProductFormContent({}: ProductFormContentProps) {
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className="w-full space-y-4">
       <div className="flex justify-end">
         <Button
           onClick={handleSubmit}
           disabled={loading}
-          className="h-9 px-4 cursor-pointer"
+          className="h-10 px-5 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-xs"
         >
-          {loading ? "Saving..." : "Add Product"}
+          {loading ? "Saving Product..." : "Create Product"}
         </Button>
       </div>
 
-      <div className="flex gap-3 w-full items-start">
-        <div className="w-1/2">
+      <div className="flex flex-col lg:flex-row gap-4 w-full items-start">
+        <div className="w-full lg:w-1/2">
           <ProductFormSection />
         </div>
-        <div className="w-1/2">
+        <div className="w-full lg:w-1/2">
           <ProductImageAndCategories />
         </div>
       </div>
-      <ShopifyVariantsManager mode="create" />
+
+      <ProductVariationsSection />
     </div>
   );
 }

@@ -311,7 +311,6 @@ export default function Hero() {
                 alt={spot1Banner.title || 'Promotional Banner'}
                 fill
                 priority
-                unoptimized
                 onError={() => handleImageError(spot1Banner.id)}
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 75vw"
                 className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-[1.01]"
@@ -403,7 +402,6 @@ export default function Hero() {
                   src={spot2ImageSrc}
                   alt={spot2Banner.title || 'Next Banner'}
                   fill
-                  unoptimized
                   onError={() => handleImageError(spot2Banner.id)}
                   sizes="(max-width: 1024px) 100vw, 30vw"
                   className="object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"

@@ -24,9 +24,9 @@ interface Category {
 
 const DEFAULT_FALLBACK_CATEGORIES: Category[] = [
   { id: '1', name: 'Apparel & Tailoring', image: '/cat_apparel_1778670103427.png', _count: { products: 38 } },
-  { id: '2', name: 'Signature Leather Goods', image: '/cat_leather_1778670351299.png', _count: { products: 19 } },
+  { id: '2', name: 'Signature Leather Goods', image: '/cat_leather_1778670351299.webp', _count: { products: 19 } },
   { id: '3', name: 'Fine Accessories', image: '/cat_accessories_1778670517925.png', _count: { products: 24 } },
-  { id: '4', name: 'Atelier Suits & Blazers', image: '/about_atelier.png', _count: { products: 16 } },
+  { id: '4', name: 'Atelier Suits & Blazers', image: '/about_atelier.webp', _count: { products: 16 } },
   { id: '5', name: 'Outerwear & Jackets', image: '/prod_overshirt_1778670536589.png', _count: { products: 12 } },
   { id: '6', name: 'Travel & Craftsmanship', image: '/about_craftsmanship.png', _count: { products: 28 } },
 ];
@@ -40,7 +40,7 @@ function CategoriesSkeleton() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+        {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
             className="aspect-[4/5] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 animate-pulse flex flex-col justify-end p-3 sm:p-4"
@@ -144,7 +144,6 @@ export default function Categories() {
                 src={imageSrc}
                 alt={cat.name}
                 fill
-                unoptimized
                 onError={() => handleImageError(cat.id)}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 className="object-cover object-center group-hover:scale-[1.03] transition-transform duration-500 ease-out"

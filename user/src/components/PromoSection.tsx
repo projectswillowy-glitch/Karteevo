@@ -74,7 +74,7 @@ export default function PromoSection() {
                 <div className="space-y-4 pt-8">
                   <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-800 border border-slate-700/60 shadow-lg">
                     <Image
-                      src="/cat_leather_1778670351299.png"
+                      src="/cat_leather_1778670351299.webp"
                       alt="JudesCart Handcrafted Leather"
                       fill
                       className="object-cover object-center hover:scale-105 transition-transform duration-700"

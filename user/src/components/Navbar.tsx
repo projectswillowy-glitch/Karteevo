@@ -20,8 +20,6 @@ import {
   Briefcase,
   Home,
   Sparkles,
-  Gift,
-  Coins,
   Package,
   LogOut,
   Ticket,
@@ -31,12 +29,16 @@ import {
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { authClient } from '@/lib/auth-client';
-import CartDrawer from './CartDrawer';
-import DailyGiftModal from './DailyGiftModal';
-import SearchModal from './SearchModal';
+import dynamic from 'next/dynamic';
 import CurrencyModal, { CURRENCIES, Currency } from './CurrencyModal';
-import AccountDrawer from './AccountDrawer';
-import AuthModal from './AuthModal';
+
+// Header overlays are only needed once the shopper opens them, so their JS is
+// kept out of the initial bundle and fetched on first use.
+const CartDrawer = dynamic(() => import('./CartDrawer'), { ssr: false });
+const DailyGiftModal = dynamic(() => import('./DailyGiftModal'), { ssr: false });
+const SearchModal = dynamic(() => import('./SearchModal'), { ssr: false });
+const AccountDrawer = dynamic(() => import('./AccountDrawer'), { ssr: false });
+const AuthModal = dynamic(() => import('./AuthModal'), { ssr: false });
 import { getApiUrl } from '@/lib/api';
 
 export interface NavCategory {
@@ -144,7 +146,7 @@ const NAVIGATION_CATEGORIES: NavCategory[] = [
       title: 'Artisan Suede Penny Loafers',
       description: 'Goodyear welted with premium Italian suede and cushioned insoles.',
       price: '₹7,499',
-      image: '/cat_leather_1778670351299.png',
+      image: '/cat_leather_1778670351299.webp',
       href: '/product?category=footwear',
     },
   },
@@ -166,7 +168,7 @@ const NAVIGATION_CATEGORIES: NavCategory[] = [
       title: 'Executive Leather Briefcase',
       description: 'Hand-burnished vegetable tanned leather with solid brass hardware.',
       price: '₹8,299',
-      image: '/cat_leather_1778670351299.png',
+      image: '/cat_leather_1778670351299.webp',
       href: '/product?id=prod-3',
     },
   },
@@ -228,11 +230,10 @@ const SEARCH_SUGGESTIONS = [
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { totalItems, openDrawer } = useCart();
+  const { totalItems, openDrawer, isDrawerOpen } = useCart();
   const { totalItems: totalWishlistItems } = useWishlist();
   const { data: session } = authClient.useSession();
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -301,22 +302,22 @@ export default function Navbar() {
   }, []);
 
   const [isVisible, setIsVisible] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
 
   const headerRef = useRef<HTMLElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const mouseLeaveTimeout = useRef<NodeJS.Timeout | null>(null);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
-  // Cycle search suggestions placeholder smoothly
+  // Cycle search suggestions placeholder smoothly (paused while the header is
+  // scrolled out of view so it does not re-render the header off-screen)
   useEffect(() => {
+    if (!isVisible) return;
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % SEARCH_SUGGESTIONS.length);
     }, 2800);
     return () => clearInterval(interval);
-  }, []);
+  }, [isVisible]);
 
   // Close menus on route change
   useEffect(() => {
@@ -342,6 +343,9 @@ export default function Navbar() {
       isUserMenuOpen
     ) {
       setIsVisible(true);
+      // Keep the reference point current so closing a menu does not compare
+      // against a stale scroll position and jump the header.
+      lastScrollY.current = window.scrollY;
       return;
     }
 
@@ -350,8 +354,6 @@ export default function Navbar() {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const scrollDiff = currentScrollY - lastScrollY.current;
-
-          setIsScrolled(currentScrollY > 20);
 
           // Always visible when near the top of the page
           if (currentScrollY < 80) {
@@ -431,15 +433,6 @@ export default function Navbar() {
     if (mouseLeaveTimeout.current) {
       clearTimeout(mouseLeaveTimeout.current);
       mouseLeaveTimeout.current = null;
-    }
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/product?search=${encodeURIComponent(searchQuery.trim())}`);
-      setIsMobileSearchOpen(false);
-      setIsMobileMenuOpen(false);
     }
   };
 
@@ -1070,36 +1063,46 @@ export default function Navbar() {
         </div>
       )}
 
-      {/* Global Interactive Slide-Over Cart Drawer & Modals */}
-      <CartDrawer />
-      <AccountDrawer
-        isOpen={isAccountDrawerOpen}
-        onClose={() => setIsAccountDrawerOpen(false)}
-        onOpenAuth={(m) => {
-          setAuthModalMode(m || 'signin');
-          setIsAuthModalOpen(true);
-        }}
-        onOpenDailyGift={() => setIsDailyGiftModalOpen(true)}
-      />
-      <DailyGiftModal
-        isOpen={isDailyGiftModalOpen}
-        onClose={() => setIsDailyGiftModalOpen(false)}
-      />
+      {/* Global Interactive Slide-Over Cart Drawer & Modals.
+          Each overlay is mounted on first open so its chunk and data stay off
+          the initial page load. */}
+      {isDrawerOpen && <CartDrawer />}
+      {isAccountDrawerOpen && (
+        <AccountDrawer
+          isOpen={isAccountDrawerOpen}
+          onClose={() => setIsAccountDrawerOpen(false)}
+          onOpenAuth={(m) => {
+            setAuthModalMode(m || 'signin');
+            setIsAuthModalOpen(true);
+          }}
+          onOpenDailyGift={() => setIsDailyGiftModalOpen(true)}
+        />
+      )}
+      {isDailyGiftModalOpen && (
+        <DailyGiftModal
+          isOpen={isDailyGiftModalOpen}
+          onClose={() => setIsDailyGiftModalOpen(false)}
+        />
+      )}
       <CurrencyModal
         isOpen={isCurrencyModalOpen}
         onClose={() => setIsCurrencyModalOpen(false)}
         selectedCurrency={selectedCurrency}
         onSelectCurrency={(c) => setSelectedCurrency(c)}
       />
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        initialMode={authModalMode}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
-      <SearchModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
-      />
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          initialMode={authModalMode}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
+      )}
+      {isSearchModalOpen && (
+        <SearchModal
+          isOpen={isSearchModalOpen}
+          onClose={() => setIsSearchModalOpen(false)}
+        />
+      )}
     </>
   );
 }

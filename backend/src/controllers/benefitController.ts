@@ -14,7 +14,7 @@ const DEFAULT_BENEFITS = {
   benefit2Desc: 'Every order is packaged sustainably and shipped with 100% carbon-neutral delivery.',
   buttonText: 'Explore the complete catalog',
   buttonLink: '/product',
-  image: '/about_atelier.png',
+  image: '/about_atelier.webp',
   isActive: true,
 };
 

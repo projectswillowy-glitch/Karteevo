@@ -43,7 +43,7 @@ const DEFAULT_CAMPAIGN: DrawCampaign = {
   id: 'default-active-draw',
   name: 'Weekly JudesCart Luxury Sweepstakes',
   prizeName: 'JudesCart Tailored Cashmere Coat & Artisan Duffle',
-  prizeImage: '/cat_leather_1778670351299.png',
+  prizeImage: '/cat_leather_1778670351299.webp',
   startDate: new Date().toISOString(),
   endDate: new Date(Date.now() + 86400000 * 4 + 14 * 3600000 + 22 * 60000).toISOString(),
   winnerCount: 1,
@@ -126,8 +126,8 @@ export default function LuckyDrawPoster() {
   };
 
   const prizeImageSrc = imageFailed[activeCampaign.id]
-    ? '/cat_leather_1778670351299.png'
-    : (activeCampaign.prizeImage || '/cat_leather_1778670351299.png');
+    ? '/cat_leather_1778670351299.webp'
+    : (activeCampaign.prizeImage || '/cat_leather_1778670351299.webp');
 
   return (
     <section className="sj-container">
@@ -248,7 +248,6 @@ export default function LuckyDrawPoster() {
               src={prizeImageSrc}
               alt={activeCampaign.prizeName || 'Featured Prize'}
               fill
-              unoptimized
               onError={() => setImageFailed((prev) => ({ ...prev, [activeCampaign.id]: true }))}
               sizes="(max-width: 1024px) 100vw, 40vw"
               className="object-cover hover:scale-105 transition-transform duration-700"

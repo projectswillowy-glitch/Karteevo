@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Search, X, ArrowRight, TrendingUp, Sparkles, Tag, Package, ChevronRight } from 'lucide-react';
+import { Search, X, ArrowRight, TrendingUp, Sparkles, Package, ChevronRight } from 'lucide-react';
 import { getApiUrl } from '@/lib/api';
 
 interface SearchModalProps {
@@ -113,15 +113,16 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Fetch real products and categories
+  // Fetch real products only when the modal is first opened
+  const hasLoadedRef = useRef(false);
   useEffect(() => {
+    if (!isOpen || hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
+
     async function loadData() {
       setLoading(true);
       try {
-        const [prodRes, catRes] = await Promise.all([
-          fetch(`${getApiUrl()}/products?limit=50`),
-          fetch(`${getApiUrl()}/categories`),
-        ]);
+        const prodRes = await fetch(`${getApiUrl()}/products?limit=50&fields=card`);
 
         if (prodRes.ok) {
           const json = await prodRes.json();
@@ -144,14 +145,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             setProducts(mapped);
           }
         }
-      } catch (e) {
+      } catch {
         // Fallback to SAMPLE_PRODUCTS
       } finally {
         setLoading(false);
       }
     }
     loadData();
-  }, []);
+  }, [isOpen]);
 
   const filteredProducts = products.filter((p) => {
     const matchesQuery = query.trim() === '' || 

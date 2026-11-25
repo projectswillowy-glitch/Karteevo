@@ -40,7 +40,7 @@ export default function CollectionsPage() {
 
   const displayCategories = categories.length > 0 ? categories : [
     { id: '1', name: 'Tops & Shirts', image: '/cat_apparel_1778670103427.png' },
-    { id: '2', name: 'Leather Goods', image: '/cat_leather_1778670351299.png' },
+    { id: '2', name: 'Leather Goods', image: '/cat_leather_1778670351299.webp' },
     { id: '3', name: 'Signature Accessories', image: '/cat_accessories_1778670517925.png' },
     { id: '4', name: 'Tailored Bottoms', image: '/cat_apparel_1778670103427.png' },
   ];

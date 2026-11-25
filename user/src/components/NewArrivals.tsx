@@ -96,7 +96,7 @@ const FALLBACK_PRODUCTS: RawProduct[] = [
     name: 'Handcrafted Executive Leather Briefcase',
     category: { id: 'c2', name: 'LEATHER GOODS' },
     brand: { id: 'b1', name: 'JudesCart' },
-    image: '/cat_leather_1778670351299.png',
+    image: '/cat_leather_1778670351299.webp',
     isNewArrival: true,
     rating: 5.0,
     reviewsCount: 67,
@@ -140,7 +140,7 @@ const FALLBACK_PRODUCTS: RawProduct[] = [
     name: 'Handcrafted Italian Calfskin Oxford Shoes',
     category: { id: 'c4', name: 'FOOTWEAR' },
     brand: { id: 'b1', name: 'JudesCart' },
-    image: '/cat_leather_1778670351299.png',
+    image: '/cat_leather_1778670351299.webp',
     isNewArrival: true,
     rating: 4.9,
     reviewsCount: 78,
@@ -151,7 +151,7 @@ const FALLBACK_PRODUCTS: RawProduct[] = [
     name: 'Minimalist Artisan Suede Chelsea Boots',
     category: { id: 'c4', name: 'FOOTWEAR' },
     brand: { id: 'b1', name: 'JudesCart' },
-    image: '/cat_leather_1778670351299.png',
+    image: '/cat_leather_1778670351299.webp',
     isCustomerFavorite: true,
     rating: 4.7,
     reviewsCount: 63,
@@ -162,7 +162,7 @@ const FALLBACK_PRODUCTS: RawProduct[] = [
     name: 'Bespoke Pure Cashmere Throw Blanket',
     category: { id: 'c5', name: 'HOME LIVING' },
     brand: { id: 'b1', name: 'JudesCart' },
-    image: '/about_atelier.png',
+    image: '/about_atelier.webp',
     isCustomerFavorite: true,
     rating: 5.0,
     reviewsCount: 54,
@@ -173,7 +173,7 @@ const FALLBACK_PRODUCTS: RawProduct[] = [
     name: 'Aroma Atelier Obsidian Ceramic Diffuser',
     category: { id: 'c5', name: 'HOME LIVING' },
     brand: { id: 'b1', name: 'JudesCart' },
-    image: '/about_atelier.png',
+    image: '/about_atelier.webp',
     isNewArrival: true,
     rating: 4.8,
     reviewsCount: 41,
@@ -194,7 +194,7 @@ const FALLBACK_PRODUCTS: RawProduct[] = [
     name: 'Bespoke Atelier Double-Breasted Blazer',
     category: { id: 'c1', name: 'APPAREL' },
     brand: { id: 'b1', name: 'JudesCart' },
-    image: '/about_atelier.png',
+    image: '/about_atelier.webp',
     isCustomerFavorite: true,
     rating: 4.9,
     reviewsCount: 136,
@@ -270,6 +270,17 @@ function NewArrivalsSkeleton() {
           </div>
         ))}
       </div>
+
+      {/* Offer slides + CTA placeholders: the loaded section adds these blocks,
+          so reserving their space keeps everything below from shifting. */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-stretch pt-1">
+        <div className="lg:col-span-8 rounded-lg bg-slate-200 animate-pulse min-h-[150px] sm:min-h-[200px]" />
+        <div className="lg:col-span-4 rounded-lg bg-slate-200 animate-pulse min-h-[150px] sm:min-h-[200px]" />
+      </div>
+
+      <div className="pt-2 flex justify-center">
+        <div className="h-[44px] w-64 rounded-lg bg-slate-200 animate-pulse" />
+      </div>
     </section>
   );
 }
@@ -289,7 +300,7 @@ export default function NewArrivals() {
     // Fetch all products from live API / Database
     const fetchCatalog = async () => {
       try {
-        const res = await fetch(`${getApiUrl()}/products?limit=100`);
+        const res = await fetch(`${getApiUrl()}/products?limit=100&fields=card`);
         if (res.ok) {
           const json = await res.json();
           const items: RawProduct[] = Array.isArray(json?.data) ? json.data : (Array.isArray(json) ? json : []);
@@ -606,7 +617,6 @@ export default function NewArrivals() {
                   src={slide.image}
                   alt={title}
                   fill
-                  unoptimized
                   className="object-cover object-center hover:scale-105 transition-transform duration-700"
                   style={{ opacity: imgOp }}
                 />
@@ -664,7 +674,7 @@ export default function NewArrivals() {
         ) : (
           <div className="lg:col-span-8 relative rounded-lg overflow-hidden bg-[#0A192F] text-white p-3 sm:p-5 flex flex-col justify-between min-h-[150px] sm:min-h-[200px] border border-[#E2E8F0] shadow-xs">
             <Image
-              src="/about_atelier.png"
+              src="/about_atelier.webp"
               alt="The Artisan Curation"
               fill
               className="object-cover object-center opacity-30 mix-blend-luminosity hover:scale-105 transition-transform duration-700"

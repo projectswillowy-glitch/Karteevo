@@ -56,7 +56,7 @@ const DEFAULT_RECOMMENDED: Product[] = [
     brand: 'JudesCart',
     price: 8499,
     originalPrice: 10499,
-    image: '/cat_leather_1778670351299.png',
+    image: '/cat_leather_1778670351299.webp',
     rating: 4.8,
     reviewsCount: 84,
     isCustomerFavorite: true,
@@ -145,7 +145,7 @@ export default function RecentlyViewed() {
     }
 
     // 2. Fetch live products from API as fallback
-    fetch(`${getApiUrl()}/products?limit=8`)
+    fetch(`${getApiUrl()}/products?limit=8&fields=card`)
       .then((r) => r.json())
       .then((res) => {
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {

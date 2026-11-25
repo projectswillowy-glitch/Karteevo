@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Plus, Trash2, X, AlertCircle, Eye, EyeOff, Upload, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import { API_URL } from "@/lib/api-client";
 
 interface ShopifyVariantsManagerProps {
   mode: "create" | "edit";
+  refreshToken?: number;
 }
 
 interface OptionBlock {
@@ -49,23 +50,35 @@ interface ShopifyVariant {
 }
 
 // Wrapper for Create Mode
-function CreateShopifyVariantsWrapper() {
+function CreateShopifyVariantsWrapper({ refreshToken }: { refreshToken?: number }) {
   const ctx = useConfigurableProduct();
-  return <ShopifyVariantsManagerUI ctx={ctx as unknown as ShopifyVariantsManagerUIProps["ctx"]} mode="create" />;
+  return (
+    <ShopifyVariantsManagerUI
+      ctx={ctx as unknown as ShopifyVariantsManagerUIProps["ctx"]}
+      mode="create"
+      refreshToken={refreshToken}
+    />
+  );
 }
 
 // Wrapper for Edit Mode
-function EditShopifyVariantsWrapper() {
+function EditShopifyVariantsWrapper({ refreshToken }: { refreshToken?: number }) {
   const ctx = useEditProduct();
-  return <ShopifyVariantsManagerUI ctx={ctx as unknown as ShopifyVariantsManagerUIProps["ctx"]} mode="edit" />;
+  return (
+    <ShopifyVariantsManagerUI
+      ctx={ctx as unknown as ShopifyVariantsManagerUIProps["ctx"]}
+      mode="edit"
+      refreshToken={refreshToken}
+    />
+  );
 }
 
 // Main component delegates to wrapper
-export default function ShopifyVariantsManager({ mode }: ShopifyVariantsManagerProps) {
+export default function ShopifyVariantsManager({ mode, refreshToken }: ShopifyVariantsManagerProps) {
   if (mode === "create") {
-    return <CreateShopifyVariantsWrapper />;
+    return <CreateShopifyVariantsWrapper refreshToken={refreshToken} />;
   }
-  return <EditShopifyVariantsWrapper />;
+  return <EditShopifyVariantsWrapper refreshToken={refreshToken} />;
 }
 
 interface ShopifyVariantsManagerUIProps {
@@ -79,9 +92,10 @@ interface ShopifyVariantsManagerUIProps {
     setVariants: React.Dispatch<React.SetStateAction<ShopifyVariant[]>>;
   };
   mode: "create" | "edit";
+  refreshToken?: number;
 }
 
-function ShopifyVariantsManagerUI({ ctx, mode }: ShopifyVariantsManagerUIProps) {
+function ShopifyVariantsManagerUI({ ctx, mode, refreshToken }: ShopifyVariantsManagerUIProps) {
   const {
     baseProduct,
     variants,
@@ -119,6 +133,17 @@ function ShopifyVariantsManagerUI({ ctx, mode }: ShopifyVariantsManagerUIProps) 
   useEffect(() => {
     fetchAttributes();
   }, []);
+
+  // Re-fetch attributes when variations are created/edited elsewhere (e.g. the Variations section)
+  const skipAttributeRefresh = useRef(true);
+  useEffect(() => {
+    if (skipAttributeRefresh.current) {
+      skipAttributeRefresh.current = false;
+      return;
+    }
+    fetchAttributes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshToken]);
 
   // 2. Reconstruct option cards in Edit Mode from database variants
   useEffect(() => {

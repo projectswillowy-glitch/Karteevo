@@ -1,4 +1,4 @@
-# JudesCart
+# Karteevo
 
 A full-stack e-commerce and lucky draw platform built with Next.js, Express.js, TypeScript, and MongoDB.
 

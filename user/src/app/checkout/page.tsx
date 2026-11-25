@@ -136,6 +136,9 @@ export default function CheckoutPage() {
       body: JSON.stringify({
         items: items.map((item) => ({
           variantId: item.variantId,
+          productId: item.productId,
+          size: item.size,
+          color: item.color,
           quantity: item.quantity,
         })),
         shippingDetails: {
@@ -180,7 +183,7 @@ export default function CheckoutPage() {
     if (!formData.pincode.trim()) return setCheckoutError('Please enter your postal/ZIP code.');
     if (items.length === 0) return setCheckoutError('Your cart is empty.');
 
-    const invalidItem = items.find((item) => !item.variantId);
+    const invalidItem = items.find((item) => !item.variantId && !item.productId);
     if (invalidItem) {
       return setCheckoutError(`"${invalidItem.title}" is no longer available. Please re-add it to your cart.`);
     }
@@ -206,6 +209,9 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items: items.map((item) => ({
             variantId: item.variantId,
+            productId: item.productId,
+            size: item.size,
+            color: item.color,
             quantity: item.quantity,
           })),
           couponCode: appliedCoupon?.code,

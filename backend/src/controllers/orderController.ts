@@ -5,6 +5,7 @@ import { calculateCouponDiscount } from './couponController.js';
 import { calculateShippingAmount } from '../lib/pricing.js';
 import { sendOrderEmails } from '../lib/mailer.js';
 import { logActivity } from '../lib/activityLogger.js';
+import { resolveVariantId } from '../lib/variantResolver.js';
 
 const prisma = prismaClient as any;
 
@@ -323,12 +324,21 @@ export const createOrder = async (req: Request, res: Response) => {
 
                     // Always calculate amount from DB price, never frontend price.
                     for (const item of items) {
-                        if (!item.variantId || !item.quantity || item.quantity <= 0) {
+                        let targetVariantId = item.variantId;
+                        if (!targetVariantId && item.productId) {
+                            try {
+                                targetVariantId = await resolveVariantId(item.productId, item.size, item.color);
+                            } catch (resolveErr) {
+                                console.warn(`Failed to resolve variant for product ${item.productId}:`, resolveErr);
+                            }
+                        }
+
+                        if (!targetVariantId || !item.quantity || item.quantity <= 0) {
                             throw new Error("Invalid order item");
                         }
 
                         const variant = await tx.productVariant.findUnique({
-                            where: { id: item.variantId }
+                            where: { id: targetVariantId }
                         });
 
                         if (!variant) {
@@ -336,12 +346,12 @@ export const createOrder = async (req: Request, res: Response) => {
                         }
 
                         if (variant.qty < item.quantity) {
-                            throw new Error(`Insufficient stock for item: ${item.title || item.variantId}`);
+                            throw new Error(`Insufficient stock for item: ${item.title || targetVariantId}`);
                         }
 
                         subtotal += variant.price * item.quantity;
                         dbItems.push({
-                            variantId: item.variantId,
+                            variantId: targetVariantId,
                             quantity: item.quantity,
                             price: variant.price,
                         });

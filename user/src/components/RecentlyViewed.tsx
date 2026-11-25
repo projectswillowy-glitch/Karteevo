@@ -8,6 +8,7 @@ import { getApiUrl } from '@/lib/api';
 
 type Product = {
   id: string | number;
+  variantId?: string;
   name: string;
   description?: string;
   category?: string;
@@ -155,6 +156,7 @@ export default function RecentlyViewed() {
             const origPriceVal = firstVariant?.offerPrice && firstVariant.price > firstVariant.offerPrice ? firstVariant.price : undefined;
             return {
               id: p.id,
+              variantId: firstVariant?.id,
               name: p.name,
               description: p.description,
               category: p.category?.name || 'Apparel',
@@ -237,6 +239,7 @@ export default function RecentlyViewed() {
             <ProductCard
               key={prod.id}
               id={prod.id}
+              variantId={prod.variantId}
               name={prod.name}
               description={prod.description}
               category={prod.category}

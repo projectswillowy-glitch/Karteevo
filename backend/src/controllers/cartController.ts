@@ -1,53 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
-
-// Helper to resolve variant ID from productId, size, and color if variantId is not provided
-const resolveVariantId = async (productId: string, size?: string, color?: string): Promise<string> => {
-    const product = await prisma.product.findUnique({
-        where: { id: productId },
-        include: {
-            variants: {
-                include: {
-                    options: {
-                        include: {
-                            attribute: true,
-                            attributeValue: true
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    if (!product) {
-        throw new Error("Product not found");
-    }
-
-    if (product.variants.length === 0) {
-        throw new Error("Product has no variants");
-    }
-
-    // Try to find matching variant
-    const match = product.variants.find(v => {
-        const hasSize = size ? v.options.some(opt => opt.attribute.name.toLowerCase() === 'size' && opt.attributeValue.value.toLowerCase() === size.toLowerCase()) : true;
-        const hasColor = color ? v.options.some(opt => opt.attribute.name.toLowerCase() === 'color' && opt.attributeValue.value.toLowerCase() === color.toLowerCase()) : true;
-        return hasSize && hasColor;
-    });
-
-    if (match) return match.id;
-
-    // Try color-only or size-only partial match
-    const partialMatch = product.variants.find(v => {
-        const hasSize = size ? v.options.some(opt => opt.attribute.name.toLowerCase() === 'size' && opt.attributeValue.value.toLowerCase() === size.toLowerCase()) : false;
-        const hasColor = color ? v.options.some(opt => opt.attribute.name.toLowerCase() === 'color' && opt.attributeValue.value.toLowerCase() === color.toLowerCase()) : false;
-        return hasSize || hasColor;
-    });
-
-    if (partialMatch) return partialMatch.id;
-
-    // Fallback to the first variant
-    return product.variants[0].id;
-};
+import { resolveVariantId } from '../lib/variantResolver.js';
 
 // GET /api/cart
 export const getCart = async (req: Request, res: Response) => {

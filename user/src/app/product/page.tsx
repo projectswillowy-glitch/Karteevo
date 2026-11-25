@@ -42,6 +42,7 @@ import { getApiUrl } from '@/lib/api';
 interface ProductSummary {
   id: string | number;
   variantId?: string;
+  variants?: Array<{ id: string; price: number; offerPrice?: number }>;
   name: string;
   category: string;
   brand?: string;
@@ -344,6 +345,8 @@ function ProductContent() {
             const origPriceVal = firstVariant?.offerPrice && firstVariant.price > firstVariant.offerPrice ? firstVariant.price : undefined;
             return {
               id: p.id,
+              variantId: firstVariant?.id,
+              variants: p.variants,
               name: p.name,
               category: p.category?.name || 'Apparel',
               brand: p.brand?.name || 'Karteevo',
@@ -406,6 +409,7 @@ function ProductContent() {
             setSelectedProduct({
               id: p.id,
               variantId: firstVariant?.id,
+              variants: p.variants,
               name: p.name,
               category: p.category?.name || 'Apparel',
               brand: p.brand?.name || 'Karteevo',
@@ -465,9 +469,25 @@ function ProductContent() {
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
+    const matchedVariant = selectedProduct.variants?.find((v: any) => {
+      const hasSize = selectedSize
+        ? v.options?.some((opt: any) => opt.attribute?.name?.toLowerCase() === 'size' && opt.attributeValue?.value?.toLowerCase() === selectedSize.toLowerCase())
+        : true;
+      const hasColor = selectedColor?.name
+        ? v.options?.some((opt: any) => opt.attribute?.name?.toLowerCase() === 'color' && opt.attributeValue?.value?.toLowerCase() === selectedColor.name.toLowerCase())
+        : true;
+      return hasSize && hasColor;
+    });
+
+    const activeVariantId = matchedVariant?.id || selectedProduct.variantId || selectedProduct.variants?.[0]?.id;
+
     addToCart(
       {
         id: selectedProduct.id,
+        productId: selectedProduct.id,
+        variantId: activeVariantId,
+        size: selectedSize,
+        color: selectedColor.name,
         name: `${selectedProduct.name} (${selectedColor.name}, ${selectedSize})`,
         price: selectedProduct.price,
         image: activeImageSrc,
@@ -512,13 +532,37 @@ function ProductContent() {
 
   const handleAddBundleToCart = () => {
     if (selectedProduct) {
-      addToCart({ id: selectedProduct.id, name: selectedProduct.name, price: selectedProduct.price, image: selectedProduct.image, category: selectedProduct.category });
+      addToCart({
+        id: selectedProduct.id,
+        productId: selectedProduct.id,
+        variantId: selectedProduct.variantId || selectedProduct.variants?.[0]?.id,
+        name: selectedProduct.name,
+        price: selectedProduct.price,
+        image: selectedProduct.image,
+        category: selectedProduct.category,
+      });
     }
     if (bundleAddons[1]) {
-      addToCart({ id: bundleAddon1.id, name: bundleAddon1.name, price: bundleAddon1.price, image: bundleAddon1.image, category: bundleAddon1.category });
+      addToCart({
+        id: bundleAddon1.id,
+        productId: bundleAddon1.id,
+        variantId: bundleAddon1.variantId || bundleAddon1.variants?.[0]?.id,
+        name: bundleAddon1.name,
+        price: bundleAddon1.price,
+        image: bundleAddon1.image,
+        category: bundleAddon1.category,
+      });
     }
     if (bundleAddons[2]) {
-      addToCart({ id: bundleAddon2.id, name: bundleAddon2.name, price: bundleAddon2.price, image: bundleAddon2.image, category: bundleAddon2.category });
+      addToCart({
+        id: bundleAddon2.id,
+        productId: bundleAddon2.id,
+        variantId: bundleAddon2.variantId || bundleAddon2.variants?.[0]?.id,
+        name: bundleAddon2.name,
+        price: bundleAddon2.price,
+        image: bundleAddon2.image,
+        category: bundleAddon2.category,
+      });
     }
     showToast(`Added ${bundleCount} bundle items to bag with 15% savings!`);
   };
@@ -1283,6 +1327,7 @@ function ProductContent() {
                     <ProductCard
                       key={prod.id}
                       id={prod.id}
+                      variantId={prod.variantId || prod.variants?.[0]?.id}
                       name={prod.name}
                       description={prod.description}
                       category={prod.category}
@@ -1536,6 +1581,7 @@ function ProductContent() {
                       <ProductCard
                         key={prod.id}
                         id={prod.id}
+                        variantId={prod.variantId || prod.variants?.[0]?.id}
                         name={prod.name}
                         description={prod.description}
                         category={prod.category}

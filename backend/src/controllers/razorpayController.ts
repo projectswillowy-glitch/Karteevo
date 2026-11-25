@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "../lib/prisma.js";
 import { calculateCouponDiscount } from "./couponController.js";
 import { calculateShippingAmount } from "../lib/pricing.js";
+import { resolveVariantId } from "../lib/variantResolver.js";
 
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
 const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -50,12 +51,21 @@ async function calculateServerAmount(
   let subtotal = 0;
 
   for (const item of items) {
-    if (!item.variantId || !item.quantity || item.quantity <= 0) {
+    let targetVariantId = item.variantId;
+    if (!targetVariantId && item.productId) {
+      try {
+        targetVariantId = await resolveVariantId(item.productId, item.size, item.color);
+      } catch (resolveErr) {
+        console.warn(`Failed to resolve variant for product ${item.productId}:`, resolveErr);
+      }
+    }
+
+    if (!targetVariantId || !item.quantity || item.quantity <= 0) {
       throw new Error("Invalid cart item");
     }
 
     const variant = await prisma.productVariant.findUnique({
-      where: { id: item.variantId },
+      where: { id: targetVariantId },
     });
 
     if (!variant) {

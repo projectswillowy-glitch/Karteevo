@@ -254,6 +254,9 @@ export default function CartPage() {
         couponCode: appliedCoupon?.code,
         items: orderItems.map((item) => ({
           variantId: item.variantId,
+          productId: item.productId,
+          size: item.size,
+          color: item.color,
           quantity: item.quantity,
         })),
       }),

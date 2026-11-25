@@ -163,7 +163,7 @@ export default function CheckoutPage() {
   };
 
   const completeOrder = (serverOrderId?: string) => {
-    setOrderId(serverOrderId || `JC-${Math.floor(100000 + Math.random() * 900000)}`);
+    setOrderId(serverOrderId || `KT-${Math.floor(100000 + Math.random() * 900000)}`);
     clearCart();
     setIsCompleted(true);
   };
@@ -418,6 +418,17 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-[#111111] mb-1">State *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    placeholder="e.g. Maharashtra / Karnataka / Kerala"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-[#111111] focus:outline-none focus:border-[#DF9F28]"
+                  />
+                </div>
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-bold text-[#111111] mb-1">PIN Code *</label>
                   <input
                     type="text"

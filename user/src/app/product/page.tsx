@@ -39,10 +39,24 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getApiUrl } from '@/lib/api';
 
+interface VariantOptionInfo {
+  attribute?: { id?: string; name?: string };
+  attributeValue?: { id?: string; value?: string };
+}
+
+interface ProductVariantInfo {
+  id: string;
+  price: number;
+  offerPrice?: number;
+  qty?: number;
+  images?: string[];
+  options?: VariantOptionInfo[];
+}
+
 interface ProductSummary {
   id: string | number;
   variantId?: string;
-  variants?: Array<{ id: string; price: number; offerPrice?: number }>;
+  variants?: ProductVariantInfo[];
   name: string;
   category: string;
   brand?: string;
@@ -171,18 +185,51 @@ const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
   },
 ];
 
-const PRODUCT_COLORS = [
-  { name: 'Camel Heather', hex: '#C19A6B' },
-  { name: 'Deep Navy', hex: '#1C2833' },
-  { name: 'Pitch Black', hex: '#111111' },
-];
+// A variant's attribute values as a plain { attributeName: value } map, so the
+// page can render exactly the variations the product actually has.
+const variantOptionMap = (variant: ProductVariantInfo): Record<string, string> => {
+  const map: Record<string, string> = {};
+  (variant.options || []).forEach((option) => {
+    const name = option.attribute?.name?.trim();
+    const value = option.attributeValue?.value?.trim();
+    if (name && value) map[name] = value;
+  });
+  return map;
+};
 
-const PRODUCT_SIZES = [
-  { label: '36 FR / 2 US', status: 'Low' },
-  { label: '38 FR / 4 US', status: '' },
-  { label: '40 FR / 6 US', status: 'Low' },
-  { label: '42 FR / 8 US', status: 'Out', disabled: true },
-];
+const COLOR_HEX_MAP: Record<string, string> = {
+  black: '#111111',
+  white: '#F8FAFC',
+  grey: '#7F8C8D',
+  gray: '#7F8C8D',
+  silver: '#BDC3C7',
+  red: '#C0392B',
+  maroon: '#7B241C',
+  pink: '#E91E63',
+  orange: '#E67E22',
+  yellow: '#F1C40F',
+  gold: '#DF9F28',
+  green: '#2E7D32',
+  teal: '#16A085',
+  blue: '#2563EB',
+  navy: '#1C2833',
+  purple: '#6C3483',
+  brown: '#795548',
+  beige: '#D8C3A5',
+  camel: '#C19A6B',
+  cream: '#F5EBDD',
+};
+
+// Colour values are stored as names, so map them to a swatch colour; unknown
+// names fall back to a neutral swatch instead of inventing a colour.
+const colorHexFor = (value: string) => {
+  const trimmed = value.trim();
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed)) return trimmed;
+  const key = trimmed.toLowerCase();
+  if (COLOR_HEX_MAP[key]) return COLOR_HEX_MAP[key];
+  const partial = Object.keys(COLOR_HEX_MAP).find((name) => key.includes(name));
+  return partial ? COLOR_HEX_MAP[partial] : '#94A3B8';
+};
 
 function ProductDetailSkeleton() {
   return (
@@ -259,8 +306,7 @@ function ProductContent() {
   const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [selectedColor, setSelectedColor] = useState(PRODUCT_COLORS[0]);
-  const [selectedSize, setSelectedSize] = useState(PRODUCT_SIZES[0].label);
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -446,6 +492,96 @@ function ProductContent() {
 
   const activeImageSrc = currentImages[activeImageIndex] || selectedProduct?.image || '/prod_overshirt_1778670536589.png';
 
+  // Variations come from the product's own variants, so the page shows the real
+  // attribute values (including a single "All" option) instead of a fixed list.
+  const variationGroups = useMemo(() => {
+    const groups: { name: string; values: string[] }[] = [];
+    (selectedProduct?.variants || []).forEach((variant) => {
+      Object.entries(variantOptionMap(variant)).forEach(([name, value]) => {
+        let group = groups.find((g) => g.name.toLowerCase() === name.toLowerCase());
+        if (!group) {
+          group = { name, values: [] };
+          groups.push(group);
+        }
+        if (!group.values.some((existing) => existing.toLowerCase() === value.toLowerCase())) {
+          group.values.push(value);
+        }
+      });
+    });
+    return groups;
+  }, [selectedProduct]);
+
+  // Fall back to the first value whenever a group has no valid selection yet.
+  const selectedOptionMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    variationGroups.forEach((group) => {
+      const current = selectedOptions[group.name];
+      map[group.name] = current && group.values.includes(current) ? current : group.values[0];
+    });
+    return map;
+  }, [variationGroups, selectedOptions]);
+
+  const selectedVariant = useMemo(() => {
+    const variants = selectedProduct?.variants || [];
+    if (variants.length === 0) return null;
+    if (variationGroups.length === 0) return variants[0];
+    return (
+      variants.find((variant) => {
+        const map = variantOptionMap(variant);
+        return variationGroups.every(
+          (group) => (map[group.name] || '').toLowerCase() === (selectedOptionMap[group.name] || '').toLowerCase()
+        );
+      }) || null
+    );
+  }, [selectedProduct, variationGroups, selectedOptionMap]);
+
+  const optionSummary = useMemo(
+    () => variationGroups.map((group) => selectedOptionMap[group.name]).filter(Boolean).join(', '),
+    [variationGroups, selectedOptionMap]
+  );
+
+  const unitPrice = selectedVariant
+    ? Number(selectedVariant.offerPrice || selectedVariant.price || selectedProduct?.price || 0)
+    : selectedProduct?.price || 0;
+
+  const unitOriginalPrice =
+    selectedVariant?.offerPrice && selectedVariant.price > selectedVariant.offerPrice
+      ? selectedVariant.price
+      : selectedProduct?.originalPrice;
+
+  const optionValue = (name: string) => {
+    const key = Object.keys(selectedOptionMap).find((k) => k.toLowerCase() === name);
+    return key ? selectedOptionMap[key] : '';
+  };
+
+  // A value is selectable only when a variant with that value exists for the
+  // other currently chosen options.
+  const isValueAvailable = (groupName: string, value: string) =>
+    (selectedProduct?.variants || []).some((variant) => {
+      const map = variantOptionMap(variant);
+      if ((map[groupName] || '').toLowerCase() !== value.toLowerCase()) return false;
+      return variationGroups.every(
+        (group) =>
+          group.name === groupName ||
+          (map[group.name] || '').toLowerCase() === (selectedOptionMap[group.name] || '').toLowerCase()
+      );
+    });
+
+  // Reset the selection to the first value of each group when the product changes.
+  useEffect(() => {
+    if (!selectedProduct) {
+      setSelectedOptions({});
+      return;
+    }
+    const defaults: Record<string, string> = {};
+    (selectedProduct.variants || []).forEach((variant) => {
+      Object.entries(variantOptionMap(variant)).forEach(([name, value]) => {
+        if (!defaults[name]) defaults[name] = value;
+      });
+    });
+    setSelectedOptions(defaults);
+  }, [selectedProduct]);
+
   // Wishlist Check
   const isFavorited = selectedProduct ? isInWishlist(selectedProduct.id) : false;
 
@@ -469,27 +605,17 @@ function ProductContent() {
 
   const handleAddToCart = () => {
     if (!selectedProduct) return;
-    const matchedVariant = selectedProduct.variants?.find((v: any) => {
-      const hasSize = selectedSize
-        ? v.options?.some((opt: any) => opt.attribute?.name?.toLowerCase() === 'size' && opt.attributeValue?.value?.toLowerCase() === selectedSize.toLowerCase())
-        : true;
-      const hasColor = selectedColor?.name
-        ? v.options?.some((opt: any) => opt.attribute?.name?.toLowerCase() === 'color' && opt.attributeValue?.value?.toLowerCase() === selectedColor.name.toLowerCase())
-        : true;
-      return hasSize && hasColor;
-    });
-
-    const activeVariantId = matchedVariant?.id || selectedProduct.variantId || selectedProduct.variants?.[0]?.id;
+    const activeVariantId = selectedVariant?.id || selectedProduct.variantId || selectedProduct.variants?.[0]?.id;
 
     addToCart(
       {
         id: selectedProduct.id,
         productId: selectedProduct.id,
         variantId: activeVariantId,
-        size: selectedSize,
-        color: selectedColor.name,
-        name: `${selectedProduct.name} (${selectedColor.name}, ${selectedSize})`,
-        price: selectedProduct.price,
+        size: optionValue('size') || 'All',
+        color: optionValue('color') || optionValue('colour') || 'All',
+        name: optionSummary ? `${selectedProduct.name} (${optionSummary})` : selectedProduct.name,
+        price: unitPrice,
         image: activeImageSrc,
         category: selectedProduct.category,
       },
@@ -520,11 +646,11 @@ function ProductContent() {
   const bundleAddon2 = allProducts.find((p) => String(p.id) === 'prod-3') || DEFAULT_FALLBACK_PRODUCTS[2];
 
   const bundleTotalRaw = useMemo(() => {
-    let total = selectedProduct?.price || 0;
+    let total = unitPrice;
     if (bundleAddons[1]) total += bundleAddon1.price;
     if (bundleAddons[2]) total += bundleAddon2.price;
     return total;
-  }, [selectedProduct, bundleAddons, bundleAddon1, bundleAddon2]);
+  }, [unitPrice, bundleAddons, bundleAddon1, bundleAddon2]);
 
   const bundleDiscount = Math.round(bundleTotalRaw * 0.15);
   const bundleFinalPrice = bundleTotalRaw - bundleDiscount;
@@ -537,7 +663,7 @@ function ProductContent() {
         productId: selectedProduct.id,
         variantId: selectedProduct.variantId || selectedProduct.variants?.[0]?.id,
         name: selectedProduct.name,
-        price: selectedProduct.price,
+        price: unitPrice,
         image: selectedProduct.image,
         category: selectedProduct.category,
       });
@@ -784,11 +910,11 @@ function ProductContent() {
                   <div className="flex items-center gap-4 pt-1">
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl sm:text-3xl font-bold text-[#111111]">
-                        ₹{selectedProduct.price.toLocaleString('en-IN')}
+                        ₹{unitPrice.toLocaleString('en-IN')}
                       </span>
-                      {selectedProduct.originalPrice && selectedProduct.originalPrice > selectedProduct.price && (
+                      {unitOriginalPrice && unitOriginalPrice > unitPrice && (
                         <span className="text-sm text-[#888888] line-through">
-                          ₹{selectedProduct.originalPrice.toLocaleString('en-IN')}
+                          ₹{unitOriginalPrice.toLocaleString('en-IN')}
                         </span>
                       )}
                     </div>
@@ -855,81 +981,106 @@ function ProductContent() {
                   </div>
                 </div>
 
-                {/* Color & Size Selectors */}
+                {/* Variation Selectors (values come from the product's variants) */}
                 <div className="pt-2 border-t border-slate-200 space-y-5">
                   
-                  {/* Color Selector */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold uppercase tracking-wider text-[#111111]">
-                        Color: <span className="font-normal text-[#555555]">{selectedColor.name}</span>
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {PRODUCT_COLORS.map((col) => (
-                        <button
-                          key={col.name}
-                          type="button"
-                          title={col.name}
-                          onClick={() => setSelectedColor(col)}
-                          className={`relative w-8 h-8 rounded-full border transition-all flex items-center justify-center cursor-pointer ${
-                            selectedColor.name === col.name
-                              ? 'ring-2 ring-[#DF9F28] ring-offset-2 scale-105 border-transparent shadow-xs'
-                              : 'border-slate-300 hover:scale-105'
-                          }`}
-                          style={{ backgroundColor: col.hex }}
-                        >
-                          {selectedColor.name === col.name && (
-                            <Check className="w-3.5 h-3.5 text-white stroke-[3]" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {variationGroups.length === 0 ? (
+                    <p className="text-xs text-[#555555]">
+                      This product is available as a single option.
+                    </p>
+                  ) : (
+                    variationGroups.map((group) => {
+                      const currentValue = selectedOptionMap[group.name] || '';
+                      const isColorGroup = /colou?r/i.test(group.name);
+                      const isSizeGroup = /size/i.test(group.name);
+                      const remaining = typeof selectedVariant?.qty === 'number' ? selectedVariant.qty : undefined;
 
-                  {/* Size Selector */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold uppercase tracking-wider text-[#111111]">Size:</span>
-                        <span className="flex items-center gap-1 text-[11px] text-[#DF9F28] font-bold">
-                          <AlertCircle className="w-3 h-3 text-[#DF9F28]" />
-                          Only 2 remaining
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => toggleAccordion('craftsmanship')}
-                        className="flex items-center gap-1 text-[#DF9F28] hover:text-[#C6891E] transition-colors font-semibold text-[11px] underline cursor-pointer"
-                      >
-                        <Ruler className="w-3.5 h-3.5" />
-                        <span>Size Guide</span>
-                      </button>
-                    </div>
+                      return (
+                        <div key={group.name} className="space-y-2">
+                          <div className="flex items-center justify-between gap-3 text-xs">
+                            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                              <span className="font-semibold uppercase tracking-wider text-[#111111]">
+                                {group.name}: <span className="font-normal normal-case text-[#555555]">{currentValue || '—'}</span>
+                              </span>
+                              {remaining !== undefined && remaining > 0 && remaining <= 5 && (
+                                <span className="flex items-center gap-1 text-[11px] font-bold text-[#DF9F28]">
+                                  <AlertCircle className="w-3 h-3 text-[#DF9F28]" />
+                                  Only {remaining} remaining
+                                </span>
+                              )}
+                              {remaining === 0 && (
+                                <span className="text-[11px] font-bold text-rose-600">Out of stock</span>
+                              )}
+                            </div>
 
-                    <div className="grid grid-cols-4 gap-2">
-                      {PRODUCT_SIZES.map((sz) => (
-                        <button
-                          key={sz.label}
-                          type="button"
-                          disabled={sz.disabled}
-                          onClick={() => setSelectedSize(sz.label)}
-                          className={`py-3 px-2 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all relative flex flex-col items-center justify-center cursor-pointer ${
-                            sz.disabled
-                              ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed line-through'
-                              : selectedSize === sz.label
-                              ? 'bg-[#0A192F] text-white border-[#0A192F] shadow-sm'
-                              : 'border-slate-200 text-[#111111] hover:border-[#DF9F28] hover:text-[#DF9F28] bg-white'
-                          }`}
-                        >
-                          <span>{sz.label}</span>
-                          {sz.status === 'Low' && (
-                            <span className="text-[9px] text-[#DF9F28] font-bold mt-0.5">Low</span>
+                            {isSizeGroup && (
+                              <button
+                                type="button"
+                                onClick={() => toggleAccordion('craftsmanship')}
+                                className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-[#DF9F28] underline transition-colors hover:text-[#C6891E] cursor-pointer"
+                              >
+                                <Ruler className="w-3.5 h-3.5" />
+                                <span>Size Guide</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {isColorGroup ? (
+                            <div className="flex flex-wrap items-center gap-3">
+                              {group.values.map((value) => {
+                                const available = isValueAvailable(group.name, value);
+                                const active = currentValue === value;
+                                return (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    title={available ? value : `${value} (unavailable)`}
+                                    disabled={!available}
+                                    onClick={() => setSelectedOptions((prev) => ({ ...prev, [group.name]: value }))}
+                                    className={`relative flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                                      active
+                                        ? 'scale-105 border-transparent ring-2 ring-[#DF9F28] ring-offset-2 shadow-xs'
+                                        : available
+                                        ? 'border-slate-300 hover:scale-105'
+                                        : 'cursor-not-allowed border-slate-200 opacity-40'
+                                    }`}
+                                    style={{ backgroundColor: colorHexFor(value) }}
+                                  >
+                                    {active && <Check className="h-3.5 w-3.5 text-white stroke-[3]" />}
+                                    <span className="sr-only">{value}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {group.values.map((value) => {
+                                const available = isValueAvailable(group.name, value);
+                                const active = currentValue === value;
+                                return (
+                                  <button
+                                    key={value}
+                                    type="button"
+                                    disabled={!available}
+                                    onClick={() => setSelectedOptions((prev) => ({ ...prev, [group.name]: value }))}
+                                    className={`min-w-16 rounded-xl border px-3 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
+                                      !available
+                                        ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400 line-through'
+                                        : active
+                                        ? 'border-[#0A192F] bg-[#0A192F] text-white shadow-sm'
+                                        : 'border-slate-200 bg-white text-[#111111] hover:border-[#DF9F28] hover:text-[#DF9F28]'
+                                    }`}
+                                  >
+                                    {value}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                        </div>
+                      );
+                    })
+                  )}
 
                   {/* Quantity Stepper */}
                   <div className="flex items-center gap-4 pt-1">
@@ -968,7 +1119,7 @@ function ProductContent() {
                       className="flex-1 py-3.5 px-6 rounded-xl bg-[#DF9F28] hover:bg-[#C6891E] text-[#111111] font-bold text-sm uppercase tracking-wider shadow-lg shadow-[#DF9F28]/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                     >
                       <ShoppingBag className="w-4 h-4 text-[#111111]" />
-                      <span>Add to Bag • ₹{(selectedProduct.price * quantity).toLocaleString('en-IN')}</span>
+                      <span>Add to Bag • ₹{(unitPrice * quantity).toLocaleString('en-IN')}</span>
                     </button>
 
                     {/* Wishlist Button */}
@@ -1181,7 +1332,7 @@ function ProductContent() {
                       {selectedProduct.name}
                     </h4>
                     <span className="text-xs font-black text-[#DF9F28] mt-0.5">
-                      ₹{selectedProduct.price.toLocaleString('en-IN')}
+                      ₹{unitPrice.toLocaleString('en-IN')}
                     </span>
                   </div>
 
@@ -1365,8 +1516,12 @@ function ProductContent() {
                     <span className="font-bold text-[#111111]">
                       ₹{selectedProduct.price.toLocaleString('en-IN')}
                     </span>
-                    <span>•</span>
-                    <span className="truncate">{selectedColor.name}</span>
+                    {optionSummary && (
+                      <>
+                        <span>•</span>
+                        <span className="truncate">{optionSummary}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

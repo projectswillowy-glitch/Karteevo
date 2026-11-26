@@ -1,9 +1,45 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { uploadToCloudinary } from '../lib/upload.js';
-import cloudinary from '../lib/cloudinary.js';
+import { uploadToCloudinary, deleteCloudinaryImage, optimizeImageUrl } from '../lib/upload.js';
 import { createProductSchema, updateProductSchema } from '../schemas/product-schema.js';
 import { logActivity } from '../lib/activityLogger.js';
+
+// SKUs are unique across the whole catalog. Checking them up front lets the
+// API answer with the offending SKU instead of a raw Prisma unique-constraint
+// error (which used to abort the whole create/update).
+const findTakenSkus = async (skus: string[], excludeVariantIds: string[] = []): Promise<string[]> => {
+    const unique = [...new Set(skus.filter(Boolean))];
+    if (unique.length === 0) return [];
+
+    const where: any = { sku: { in: unique } };
+    if (excludeVariantIds.length > 0) where.id = { notIn: excludeVariantIds };
+
+    const existing = await prisma.productVariant.findMany({ where, select: { sku: true } });
+    return existing.map((variant: { sku: string }) => variant.sku);
+};
+
+const generateUniqueSku = (name: string, index: number, used: Set<string>): string => {
+    const base = `${String(name || 'SKU').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'SKU'}-${index + 1}`;
+    let sku = `${base}-${Date.now().toString(36).toUpperCase()}`;
+    let attempt = 1;
+    while (used.has(sku)) {
+        sku = `${base}-${Date.now().toString(36).toUpperCase()}-${++attempt}`;
+    }
+    return sku;
+};
+
+const duplicateSkuResponse = (skus: string[]) => ({
+    code: 'SKU_TAKEN',
+    error: `SKU ${skus.map(s => `"${s}"`).join(', ')} is already used by another variant. Use a different SKU.`,
+    duplicateSkus: skus,
+});
+
+const isSkuConflict = (error: any): boolean => {
+    if (error?.code !== 'P2002') return false;
+    const target = error?.meta?.target;
+    const fields = Array.isArray(target) ? target.map(String) : [String(target ?? '')];
+    return fields.some(field => field.toLowerCase().includes('sku'));
+};
 
 export const createProductWithVariants = async (req: Request, res: Response) => {
     try {
@@ -23,6 +59,57 @@ export const createProductWithVariants = async (req: Request, res: Response) => 
         // Parse variants data
         const variantsData = JSON.parse(data.variants || '[]');
 
+        // Build the variant payloads first so SKUs can be validated before
+        // anything is written.
+        const variantPayloads: { requestedSku: string; data: any }[] = await Promise.all(
+            variantsData.map(async (v: any, index: number) => {
+                const currentVariantImages = variantImageFiles.filter(f => f.fieldname.startsWith(`variantImages[${index}]`));
+                const imageUrls = await Promise.all(currentVariantImages.map(f => uploadToCloudinary(f.buffer, f.originalname)));
+
+                return {
+                    requestedSku: typeof v.sku === 'string' ? v.sku.trim() : '',
+                    data: {
+                        price: parseFloat(v.price),
+                        qty: parseInt(v.qty),
+                        offerPrice: v.offerPrice ? parseFloat(v.offerPrice) : null,
+                        purchasePrice: v.purchasePrice != null ? parseFloat(v.purchasePrice) : null,
+                        purchasePriceInc: v.purchasePriceInc != null ? parseFloat(v.purchasePriceInc) : null,
+                        margin: v.margin != null ? parseFloat(v.margin) : null,
+                        sellingPriceInc: v.sellingPriceInc != null ? parseFloat(v.sellingPriceInc) : null,
+                        images: imageUrls,
+                        options: {
+                            create: v.attributes.map((attr: any) => ({
+                                attributeId: attr.attributeId,
+                                valueId: attr.valueId,
+                            })),
+                        },
+                    },
+                };
+            })
+        );
+
+        const requestedSkus = variantPayloads.map(v => v.requestedSku).filter(Boolean);
+        const repeatedSkus = [...new Set(requestedSkus.filter((sku, i) => requestedSkus.indexOf(sku) !== i))];
+        if (repeatedSkus.length > 0) {
+            return res.status(400).json({
+                code: 'DUPLICATE_SKU',
+                error: `Each variant needs its own SKU. Duplicated: ${repeatedSkus.join(', ')}.`,
+                duplicateSkus: repeatedSkus,
+            });
+        }
+
+        const takenSkus = await findTakenSkus(requestedSkus);
+        if (takenSkus.length > 0) {
+            return res.status(409).json(duplicateSkuResponse(takenSkus));
+        }
+
+        const usedSkus = new Set(requestedSkus);
+        const variantCreates = variantPayloads.map((v, index) => {
+            const sku = v.requestedSku || generateUniqueSku(data.name, index, usedSkus);
+            usedSkus.add(sku);
+            return { ...v.data, sku };
+        });
+
         const product = await prisma.product.create({
             data: {
                 name: data.name,
@@ -35,28 +122,7 @@ export const createProductWithVariants = async (req: Request, res: Response) => 
                 isCustomerFavorite: data.isCustomerFavorite === 'true',
                 isNewArrival: data.isNewArrival === 'true',
                 variants: {
-                    create: await Promise.all(variantsData.map(async (v: any, index: number) => {
-                        const currentVariantImages = variantImageFiles.filter(f => f.fieldname.startsWith(`variantImages[${index}]`));
-                        const imageUrls = await Promise.all(currentVariantImages.map(f => uploadToCloudinary(f.buffer, f.originalname)));
-                        
-                        return {
-                            price: parseFloat(v.price),
-                            qty: parseInt(v.qty),
-                            offerPrice: v.offerPrice ? parseFloat(v.offerPrice) : null,
-                            purchasePrice: v.purchasePrice != null ? parseFloat(v.purchasePrice) : null,
-                            purchasePriceInc: v.purchasePriceInc != null ? parseFloat(v.purchasePriceInc) : null,
-                            margin: v.margin != null ? parseFloat(v.margin) : null,
-                            sellingPriceInc: v.sellingPriceInc != null ? parseFloat(v.sellingPriceInc) : null,
-                            sku: (v.sku && String(v.sku).trim()) || `${data.name.toUpperCase()}-${index}-${Date.now()}`,
-                            images: imageUrls,
-                            options: {
-                                create: v.attributes.map((attr: any) => ({
-                                    attributeId: attr.attributeId,
-                                    valueId: attr.valueId,
-                                })),
-                            },
-                        };
-                    })),
+                    create: variantCreates,
                 },
             },
             include: { variants: true },
@@ -67,7 +133,16 @@ export const createProductWithVariants = async (req: Request, res: Response) => 
     } catch (error: any) {
         console.error("Create product with variants error:", error);
         if (error?.code === 'P2002') {
-            return res.status(400).json({ error: "A variant with this SKU already exists. Please use a different SKU." });
+            if (isSkuConflict(error)) {
+                return res.status(409).json({
+                    code: 'SKU_TAKEN',
+                    error: "A variant with this SKU already exists. Please use a different SKU.",
+                });
+            }
+            return res.status(400).json({
+                code: 'CONFLICT',
+                error: "A variant option is duplicated. Each attribute can only be set once per variant.",
+            });
         }
         res.status(500).json({ error: error.message || "Failed to create product" });
     }
@@ -91,14 +166,7 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
         const mainImageFile = files.find(f => f.fieldname === 'mainImage');
         if (mainImageFile) {
             // Delete old safely
-            if (existingProduct.image && existingProduct.image.includes('res.cloudinary.com') && process.env.CLOUDINARY_CLOUD_NAME) {
-                const publicId = existingProduct.image.split("/").pop()?.split(".")[0];
-                if (publicId) {
-                    try {
-                        await (cloudinary as any).uploader.destroy(`stevejon/${publicId}`);
-                    } catch (e) {}
-                }
-            }
+            await deleteCloudinaryImage(existingProduct.image);
             photoUrl = await uploadToCloudinary(mainImageFile.buffer, mainImageFile.originalname);
         } else if (data.existingMainImage) {
             photoUrl = data.existingMainImage;
@@ -115,6 +183,29 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
         const variantsData = JSON.parse(data.variants || '[]');
         const deletedVariantIds = JSON.parse(data.deletedVariantIds || '[]');
 
+        // Validate SKUs before the transaction so a duplicate is reported
+        // against the SKU that caused it instead of aborting the whole update.
+        const submittedSkus: string[] = variantsData
+            .map((v: any) => (typeof v.sku === 'string' ? v.sku.trim() : ''))
+            .filter(Boolean);
+        const repeatedSkus = [...new Set(submittedSkus.filter((sku, i) => submittedSkus.indexOf(sku) !== i))];
+        if (repeatedSkus.length > 0) {
+            return res.status(400).json({
+                code: 'DUPLICATE_SKU',
+                error: `Each variant needs its own SKU. Duplicated: ${repeatedSkus.join(', ')}.`,
+                duplicateSkus: repeatedSkus,
+            });
+        }
+
+        const ownVariantIds = variantsData
+            .filter((v: any) => !v.isNew && v.id)
+            .map((v: any) => v.id);
+        const takenSkus = await findTakenSkus(submittedSkus, ownVariantIds);
+        if (takenSkus.length > 0) {
+            return res.status(409).json(duplicateSkuResponse(takenSkus));
+        }
+        const usedSkus = new Set(submittedSkus);
+
         // Start Transaction
         const updatedProduct = await prisma.$transaction(async (tx: any) => {
             // Delete marked variants
@@ -124,14 +215,7 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
                 });
                 for (const v of variantsToDelete) {
                     for (const img of v.images || []) {
-                        if (img && img.includes('res.cloudinary.com') && process.env.CLOUDINARY_CLOUD_NAME) {
-                            const publicId = img.split("/").pop()?.split(".")[0];
-                            if (publicId) {
-                                try {
-                                    await (cloudinary as any).uploader.destroy(`stevejon/${publicId}`);
-                                } catch (e) {}
-                            }
-                        }
+                        await deleteCloudinaryImage(img);
                     }
                 }
                 await tx.variantOption.deleteMany({
@@ -190,7 +274,7 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
                             purchasePriceInc: v.purchasePriceInc != null ? parseFloat(v.purchasePriceInc) : null,
                             margin: v.margin != null ? parseFloat(v.margin) : null,
                             sellingPriceInc: v.sellingPriceInc != null ? parseFloat(v.sellingPriceInc) : null,
-                            sku: (v.sku && String(v.sku).trim()) || `${data.name.toUpperCase()}-${i}-${Date.now()}`,
+                            sku: (v.sku && String(v.sku).trim()) || generateUniqueSku(data.name, i, usedSkus),
                             images: finalImages,
                             options: {
                                 create: v.attributes.map((attr: any) => ({
@@ -239,7 +323,16 @@ export const updateProductWithVariants = async (req: Request, res: Response) => 
     } catch (error: any) {
         console.error("Update product with variants error:", error);
         if (error?.code === 'P2002') {
-            return res.status(400).json({ error: "A variant with this SKU already exists. Please use a different SKU." });
+            if (isSkuConflict(error)) {
+                return res.status(409).json({
+                    code: 'SKU_TAKEN',
+                    error: "A variant with this SKU already exists. Please use a different SKU.",
+                });
+            }
+            return res.status(400).json({
+                code: 'CONFLICT',
+                error: "A variant option is duplicated. Each attribute can only be set once per variant.",
+            });
         }
         res.status(500).json({ error: error.message || "Failed to update product" });
     }
@@ -311,16 +404,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         if (file) {
             photoUrl = await uploadToCloudinary(file.buffer, file.originalname);
             
-            if (existingProduct.image) {
-                const oldPublicId = existingProduct.image.split("/").pop()?.split(".")[0];
-                if (oldPublicId) {
-                    try {
-                        await (cloudinary as any).uploader.destroy(`Deco moja/${oldPublicId}`);
-                    } catch (error) {
-                        console.warn("Failed to delete old image:", error);
-                    }
-                }
-            }
+            await deleteCloudinaryImage(existingProduct.image);
         }
 
         const updateData: any = {};
@@ -358,40 +442,17 @@ export const deleteProduct = async (req: Request, res: Response) => {
         }
 
         // Delete Main Image safely
-        if (product.image && product.image.includes('res.cloudinary.com') && process.env.CLOUDINARY_CLOUD_NAME) {
-            const oldPublicId = product.image.split("/").pop()?.split(".")[0];
-            if (oldPublicId) {
-                try {
-                    await (cloudinary as any).uploader.destroy(`stevejon/${oldPublicId}`);
-                } catch (e) {
-                    console.warn("Failed to delete product image:", e);
-                }
-            }
-        }
+        await deleteCloudinaryImage(product.image);
 
         // Delete Subimages safely
         for (const img of product.subimage || []) {
-            if (img && img.includes('res.cloudinary.com') && process.env.CLOUDINARY_CLOUD_NAME) {
-                const publicId = img.split("/").pop()?.split(".")[0];
-                if (publicId) {
-                    try {
-                        await (cloudinary as any).uploader.destroy(`stevejon/${publicId}`);
-                    } catch (e) {}
-                }
-            }
+            await deleteCloudinaryImage(img);
         }
 
         // Delete Variant Images safely
         for (const v of product.variants || []) {
             for (const img of v.images || []) {
-                if (img && img.includes('res.cloudinary.com') && process.env.CLOUDINARY_CLOUD_NAME) {
-                    const publicId = img.split("/").pop()?.split(".")[0];
-                    if (publicId) {
-                        try {
-                            await (cloudinary as any).uploader.destroy(`stevejon/${publicId}`);
-                        } catch (e) {}
-                    }
-                }
+                await deleteCloudinaryImage(img);
             }
         }
 
@@ -743,7 +804,8 @@ export const getProductImage = async (req: Request, res: Response) => {
 
         if (!src) return res.status(404).json({ error: 'Image not found' });
 
-        if (!isInlineImage(src)) return res.redirect(src);
+        // Cloudinary URLs are served through the CDN with delivery transforms.
+        if (!isInlineImage(src)) return res.redirect(optimizeImageUrl(src, 800) || src);
 
         const match = /^data:([^;,]+);base64,([A-Za-z0-9+/=]+)$/.exec(src);
         if (!match) return res.status(415).json({ error: 'Unsupported image format' });

@@ -140,6 +140,23 @@ function newRow(
   };
 }
 
+/* Two rows can resolve to the same code (e.g. "Black" picked twice), so keep
+   generated SKUs unique within the product before they reach the API. */
+function withUniqueSkus(list: VariationGroup[]): VariationGroup[] {
+  const seen = new Set<string>();
+  return list.map((g) => ({
+    ...g,
+    rows: g.rows.map((r) => {
+      if (!r.sku) return r;
+      let sku = r.sku;
+      let n = 2;
+      while (seen.has(sku)) sku = `${r.sku}-${n++}`;
+      seen.add(sku);
+      return sku === r.sku ? r : { ...r, sku };
+    }),
+  }));
+}
+
 /* Running row offset so SKUs stay unique across attribute groups */
 function skuOffsetFor(list: VariationGroup[], groupId?: string): number {
   if (!groupId) return list.reduce((n, g) => n + g.rows.length, 0);
@@ -229,13 +246,14 @@ export default function ProductVariationsSection() {
   const [taxType, setTaxType] = useState<TaxType>("exclusive");
   const [productType, setProductType] = useState<ProductType>("single");
   const [skuFormat, setSkuFormat] = useState<SkuFormat>("sku-number");
-  const [baseSkuPrefix] = useState<string>(() => generateBaseSku());
+  // Generated after mount: a random value during SSR cannot match the client.
+  const [baseSkuPrefix, setBaseSkuPrefix] = useState<string>("");
 
   /* Variation library (attributes + values from the database) */
   const [allAttrs, setAllAttrs] = useState<DbAttribute[]>([]);
 
   /* Single Product State */
-  const [singleSku, setSingleSku] = useState<string>(`${baseSkuPrefix}-1`);
+  const [singleSku, setSingleSku] = useState<string>("");
   const [singlePurchasePrice, setSinglePurchasePrice] = useState<number>(0);
   const [singlePurchasePriceInc, setSinglePurchasePriceInc] = useState<number>(0);
   const [singleMargin, setSingleMargin] = useState<number>(25);
@@ -245,6 +263,12 @@ export default function ProductVariationsSection() {
 
   /* Variable Groups State */
   const [groups, setGroups] = useState<VariationGroup[]>([]);
+
+  useEffect(() => {
+    const prefix = generateBaseSku();
+    setBaseSkuPrefix(prefix);
+    setSingleSku(`${prefix}-1`);
+  }, []);
 
   /* Load variation library from the backend */
   const refreshVariations = useCallback(async () => {
@@ -268,13 +292,15 @@ export default function ProductVariationsSection() {
     setSkuFormat(newFormat);
     setGroups((prev) => {
       let cursor = 0;
-      return prev.map((g) => ({
-        ...g,
-        rows: g.rows.map((r) => ({
-          ...r,
-          sku: buildSku(newFormat, baseSkuPrefix, cursor++, r.valueName),
-        })),
-      }));
+      return withUniqueSkus(
+        prev.map((g) => ({
+          ...g,
+          rows: g.rows.map((r) => ({
+            ...r,
+            sku: buildSku(newFormat, baseSkuPrefix, cursor++, r.valueName),
+          })),
+        }))
+      );
     });
   };
 
@@ -403,20 +429,22 @@ export default function ProductVariationsSection() {
     const attr = allAttrs.find((a) => a.id === attrId);
     setGroups((prev) => {
       const offset = skuOffsetFor(prev, groupId);
-      return prev.map((g) => {
-        if (g.id !== groupId) return g;
-        return {
-          ...g,
-          variationId: attrId,
-          variationName: attr ? attr.name : "",
-          rows: g.rows.map((row, idx) => ({
-            ...row,
-            valueId: "",
-            valueName: "",
-            sku: buildSku(skuFormat, baseSkuPrefix, offset + idx),
-          })),
-        };
-      });
+      return withUniqueSkus(
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            variationId: attrId,
+            variationName: attr ? attr.name : "",
+            rows: g.rows.map((row, idx) => ({
+              ...row,
+              valueId: "",
+              valueName: "",
+              sku: buildSku(skuFormat, baseSkuPrefix, offset + idx),
+            })),
+          };
+        })
+      );
     });
   };
 
@@ -477,23 +505,33 @@ export default function ProductVariationsSection() {
     const valObj = attr?.values.find((v) => v.id === valueId);
     const valueName = valObj ? valObj.value : "";
 
-    setGroups((prev) =>
-      prev.map((g) => {
-        if (g.id !== groupId) return g;
-        return {
-          ...g,
-          rows: g.rows.map((r, idx) => {
-            if (r.id !== rowId) return r;
-            return {
-              ...r,
-              valueId,
-              valueName,
-              sku: buildSku(skuFormat, baseSkuPrefix, idx, valueName),
-            };
-          }),
-        };
-      })
-    );
+    setGroups((prev) => {
+      // Row indexes are per group, so offset them to keep SKUs unique across
+      // every variation group of the product.
+      const offset = skuOffsetFor(prev, groupId);
+      return withUniqueSkus(
+        prev.map((g) => {
+          if (g.id !== groupId) return g;
+          return {
+            ...g,
+            rows: g.rows.map((r, idx) => {
+              if (r.id !== rowId) return r;
+              return {
+                ...r,
+                valueId,
+                valueName,
+                sku: buildSku(
+                  skuFormat,
+                  baseSkuPrefix,
+                  offset + idx,
+                  valueName
+                ),
+              };
+            }),
+          };
+        })
+      );
+    });
   };
 
   /* Row pricing handlers */

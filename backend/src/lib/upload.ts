@@ -2,6 +2,8 @@ import cloudinary from './cloudinary.js';
 import fs from 'fs';
 import path from 'path';
 
+const CLOUDINARY_FOLDER = process.env.CLOUDINARY_FOLDER || 'karteevo';
+
 const getMimeType = (filename: string): string => {
     const ext = path.extname(filename).toLowerCase();
     switch (ext) {
@@ -20,38 +22,98 @@ const getMimeType = (filename: string): string => {
     }
 };
 
-// Cloudinary is temporarily disabled per user request.
-// Set ENABLE_CLOUDINARY=true in environment variables to re-enable cloud upload.
-const ENABLE_CLOUD_STORAGE = process.env.ENABLE_CLOUDINARY === 'true';
+const hasCloudinaryCredentials = () => Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+);
+
+// Cloudinary is the image CDN. Uploads go there whenever the account
+// credentials are present; set ENABLE_CLOUDINARY=false to keep everything as
+// inline data URLs (a bare local setup with no Cloudinary account).
+export const isCloudinaryEnabled = () =>
+    process.env.ENABLE_CLOUDINARY !== 'false' && hasCloudinaryCredentials();
 
 export const uploadToCloudinary = async (fileBuffer: Buffer, originalName: string) => {
-    const mimeType = getMimeType(originalName);
-    const base64 = fileBuffer.toString('base64');
-    const dataUri = `data:${mimeType};base64,${base64}`;
+    const dataUri = `data:${getMimeType(originalName)};base64,${fileBuffer.toString('base64')}`;
 
-    const hasCloudinary = ENABLE_CLOUD_STORAGE && Boolean(
-        process.env.CLOUDINARY_CLOUD_NAME &&
-        process.env.CLOUDINARY_API_KEY &&
-        process.env.CLOUDINARY_API_SECRET
-    );
-
-    if (hasCloudinary) {
+    if (isCloudinaryEnabled()) {
         try {
             const uploadResult = await cloudinary.uploader.upload(dataUri, {
-                folder: process.env.CLOUDINARY_FOLDER || 'karteevo',
+                folder: CLOUDINARY_FOLDER,
                 resource_type: 'auto',
             });
             if (uploadResult?.secure_url) {
                 return uploadResult.secure_url;
             }
         } catch (error: any) {
-            console.warn('Cloudinary upload failed, falling back to data URL:', error?.message || error);
+            console.warn('Cloudinary upload failed, falling back to a data URL:', error?.message || error);
         }
     }
 
-    // Cloud upload temporarily removed: return Base64 Data URL directly
-    // This requires 0 external services, 0 disk writes, and works seamlessly in Vercel Serverless & local
     return dataUri;
+};
+
+/* ------------------------------------------------------------------ */
+/* Cloudinary delivery helpers                                        */
+/* ------------------------------------------------------------------ */
+
+const TRANSFORM_KEY = /^(f|q|w|h|c|ar|dpr|g|e|b|r|o|z|x|y|a|fl|if|dn|du|dl|vc|ac|br|co|l)_/;
+
+// A delivery segment such as "f_auto,q_auto,w_1200,c_limit".
+const isTransformSegment = (segment: string) =>
+    segment.length > 0 &&
+    segment.split(',').every(part => TRANSFORM_KEY.test(part));
+
+const splitCloudinaryPath = (url: string): { prefix: string; segments: string[] } | null => {
+    const marker = '/image/upload/';
+    const base = url.split('?')[0];
+    const index = base.indexOf(marker);
+    if (index === -1) return null;
+
+    const segments = base.slice(index + marker.length).split('/').filter(Boolean);
+    if (segments.length === 0) return null;
+
+    return { prefix: base.slice(0, index + marker.length), segments };
+};
+
+// Adds Cloudinary's delivery transforms so the CDN serves WebP/AVIF at the
+// requested width instead of the original upload. Non-Cloudinary URLs (data
+// URLs, other hosts) are returned untouched.
+export const optimizeImageUrl = (url: string | null | undefined, width = 1200): string | null | undefined => {
+    if (!url) return url;
+
+    const parsed = splitCloudinaryPath(url);
+    if (!parsed || isTransformSegment(parsed.segments[0])) return url;
+
+    return `${parsed.prefix}f_auto,q_auto,w_${width},c_limit/${parsed.segments.join('/')}`;
+};
+
+// Public id including the folder, so a delete hits the asset that was actually
+// uploaded (uploads go to CLOUDINARY_FOLDER, not to a hard-coded folder).
+export const cloudinaryPublicId = (url?: string | null): string | null => {
+    if (!url) return null;
+
+    const parsed = splitCloudinaryPath(url);
+    if (!parsed) return null;
+
+    const segments = parsed.segments.filter(
+        segment => !isTransformSegment(segment) && !/^v\d+$/.test(segment)
+    );
+    const publicId = segments.join('/').replace(/\.[a-zA-Z0-9]+$/, '');
+
+    return publicId || null;
+};
+
+export const deleteCloudinaryImage = async (url?: string | null) => {
+    const publicId = cloudinaryPublicId(url);
+    if (!publicId || !hasCloudinaryCredentials()) return;
+
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error: any) {
+        console.warn('Cloudinary delete failed (non-fatal):', error?.message || error);
+    }
 };
 
 export const safeDeleteImage = async (imageUrl?: string | null) => {
@@ -68,16 +130,10 @@ export const safeDeleteImage = async (imageUrl?: string | null) => {
                     fs.unlinkSync(filePath);
                 }
             }
-        } else if (imageUrl.includes('res.cloudinary.com') || imageUrl.includes('cloudinary')) {
-            const publicId = imageUrl.split('/').pop()?.split('.')[0];
-            if (publicId && process.env.CLOUDINARY_CLOUD_NAME) {
-                const folder = process.env.CLOUDINARY_FOLDER || 'karteevo';
-                await (cloudinary as any).uploader.destroy(`${folder}/${publicId}`).catch(() => {});
-            }
+        } else if (imageUrl.includes('res.cloudinary.com')) {
+            await deleteCloudinaryImage(imageUrl);
         }
     } catch (err) {
         console.warn('safeDeleteImage non-fatal warning:', err);
     }
 };
-
-

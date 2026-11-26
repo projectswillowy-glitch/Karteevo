@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { uploadToCloudinary } from '../lib/upload.js';
-import cloudinary from '../lib/cloudinary.js';
+import { uploadToCloudinary, deleteCloudinaryImage } from '../lib/upload.js';
 import { createDrawCampaignSchema, updateDrawCampaignSchema } from '../schemas/draw-campaign-schema.js';
 
 // GET /api/draws
@@ -73,16 +72,7 @@ export const updateDrawCampaign = async (req: Request, res: Response) => {
             photoUrl = await uploadToCloudinary(file.buffer, file.originalname);
 
             // Delete old image from Cloudinary
-            if (existing.prizeImage) {
-                const publicId = existing.prizeImage.split("/").pop()?.split(".")[0];
-                if (publicId) {
-                    try {
-                        await (cloudinary as any).uploader.destroy(`Deco moja/${publicId}`);
-                    } catch (err) {
-                        console.warn("⚠️ Failed to delete old image:", err);
-                    }
-                }
-            }
+            await deleteCloudinaryImage(existing.prizeImage);
         }
 
         const updated = await prisma.drawCampaign.update({
@@ -119,16 +109,7 @@ export const deleteDrawCampaign = async (req: Request, res: Response) => {
         }
 
         // Clean up Cloudinary image
-        if (existing.prizeImage) {
-            const publicId = existing.prizeImage.split("/").pop()?.split(".")[0];
-            if (publicId) {
-                try {
-                    await (cloudinary as any).uploader.destroy(`Deco moja/${publicId}`);
-                } catch (err) {
-                    console.warn("⚠️ Failed to delete image:", err);
-                }
-            }
-        }
+        await deleteCloudinaryImage(existing.prizeImage);
 
         await prisma.drawCampaign.delete({
             where: { id }

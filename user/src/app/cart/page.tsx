@@ -262,7 +262,7 @@ export default function CartPage() {
       }),
     });
 
-    const orderData = await createOrderResponse.json();
+    const orderData = await createOrderResponse.json().catch(() => ({}));
     if (!createOrderResponse.ok || !orderData.success) {
       throw new Error(orderData.error || 'Failed to initialize payment gateway.');
     }

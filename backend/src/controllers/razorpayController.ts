@@ -9,20 +9,32 @@ import { resolveVariantId } from "../lib/variantResolver.js";
 const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
 const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
 
+// Razorpay rejects a single order above this value (in rupees).
+const RAZORPAY_MAX_AMOUNT = 500000;
+const OBJECT_ID_PATTERN = /^[a-f0-9]{24}$/i;
+
 if (!razorpayKeyId || !razorpayKeySecret) {
   console.warn("⚠️ Razorpay environment variables are missing. Check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.");
 }
 
-console.log("Razorpay ENV Check:", {
-  keyIdExists: !!razorpayKeyId,
-  keyIdPrefix: razorpayKeyId?.slice(0, 8),
-  secretExists: !!razorpayKeySecret,
-  secretLength: razorpayKeySecret?.length,
-});
+class CheckoutError extends Error {
+  status: number;
+  code: string;
+
+  constructor(status: number, code: string, message: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
 
 function getRazorpayInstance() {
   if (!razorpayKeyId || !razorpayKeySecret) {
-    throw new Error("Razorpay environment variables RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are required");
+    throw new CheckoutError(
+      503,
+      "PAYMENT_GATEWAY_NOT_CONFIGURED",
+      "Online payment is temporarily unavailable. Please choose Cash on Delivery."
+    );
   }
   return new Razorpay({
     key_id: razorpayKeyId,
@@ -39,44 +51,91 @@ function getGatewayErrorMessage(error: any) {
   );
 }
 
+function isGatewayAuthError(error: any) {
+  const status = error?.statusCode || error?.status;
+  const description = getGatewayErrorMessage(error);
+  return status === 401 || /authentication failed|unauthori[sz]ed/i.test(description);
+}
+
+function isAmountTooLargeError(error: any) {
+  return /maximum amount/i.test(getGatewayErrorMessage(error));
+}
+
+function itemLabel(item: any, productName?: string | null) {
+  const name = productName || item?.title || item?.name;
+  return typeof name === "string" && name.trim() ? `"${name.trim()}"` : "An item in your cart";
+}
+
+async function resolveItemVariant(item: any) {
+  const rawVariantId = typeof item?.variantId === "string" ? item.variantId.trim() : "";
+  const rawProductId = typeof item?.productId === "string" ? item.productId.trim() : "";
+
+  const variantId = OBJECT_ID_PATTERN.test(rawVariantId) ? rawVariantId : undefined;
+  const productId = OBJECT_ID_PATTERN.test(rawProductId) ? rawProductId : undefined;
+
+  if (variantId) {
+    const variant = await prisma.productVariant.findUnique({
+      where: { id: variantId },
+      include: { product: { select: { name: true } } },
+    });
+
+    if (variant) return variant;
+  }
+
+  // The variant may have been re-created (for example after a catalog re-import)
+  // while the cart still holds the old id. Try the product + size/colour instead.
+  if (productId) {
+    try {
+      const resolvedId = await resolveVariantId(productId, item?.size, item?.color);
+      const variant = await prisma.productVariant.findUnique({
+        where: { id: resolvedId },
+        include: { product: { select: { name: true } } },
+      });
+      if (variant) return variant;
+    } catch {
+      // Fall through to the "no longer available" error below.
+    }
+  }
+
+  throw new CheckoutError(
+    400,
+    "ITEM_UNAVAILABLE",
+    `${itemLabel(item)} is no longer available. Please remove it from your cart and add it again.`
+  );
+}
+
 async function calculateServerAmount(
   items: any[],
   couponCode?: string,
   shippingMethod?: string
 ) {
   if (!Array.isArray(items) || items.length === 0) {
-    throw new Error("Cart items are required");
+    throw new CheckoutError(400, "EMPTY_CART", "Your cart is empty.");
   }
 
   let subtotal = 0;
 
   for (const item of items) {
-    let targetVariantId = item.variantId;
-    if (!targetVariantId && item.productId) {
-      try {
-        targetVariantId = await resolveVariantId(item.productId, item.size, item.color);
-      } catch (resolveErr) {
-        console.warn(`Failed to resolve variant for product ${item.productId}:`, resolveErr);
-      }
+    const quantity = Number(item?.quantity);
+
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new CheckoutError(400, "INVALID_QUANTITY", "Each item needs a valid quantity.");
     }
 
-    if (!targetVariantId || !item.quantity || item.quantity <= 0) {
-      throw new Error("Invalid cart item");
+    const variant = await resolveItemVariant(item);
+    const label = itemLabel(item, variant.product?.name);
+
+    if (variant.qty < quantity) {
+      throw new CheckoutError(
+        400,
+        "INSUFFICIENT_STOCK",
+        variant.qty > 0
+          ? `Only ${variant.qty} left of ${label}. Please update your cart.`
+          : `${label} is out of stock. Please remove it from your cart.`
+      );
     }
 
-    const variant = await prisma.productVariant.findUnique({
-      where: { id: targetVariantId },
-    });
-
-    if (!variant) {
-      throw new Error("Product variant not found");
-    }
-
-    if (variant.qty < item.quantity) {
-      throw new Error(`Only ${variant.qty} items left in stock`);
-    }
-
-    subtotal += variant.price * item.quantity;
+    subtotal += variant.price * quantity;
   }
 
   let discountAmount = 0;
@@ -88,7 +147,7 @@ async function calculateServerAmount(
     });
 
     if (!coupon) {
-      throw new Error("Coupon code is invalid");
+      throw new CheckoutError(400, "INVALID_COUPON", "This coupon code is no longer valid.");
     }
 
     discountAmount = calculateCouponDiscount(coupon, subtotal);
@@ -109,22 +168,20 @@ async function calculateServerAmount(
 // POST /api/payments/razorpay/create-order
 export const createRazorpayOrder = async (req: Request, res: Response) => {
   try {
-    const { items, couponCode, shippingMethod } = req.body;
-
-    if (!razorpayKeyId || !razorpayKeySecret) {
-      return res.status(500).json({
-        success: false,
-        error: "Razorpay credentials are missing on server",
-      });
-    }
+    const { items, couponCode, shippingMethod } = req.body ?? {};
 
     const amountData = await calculateServerAmount(items, couponCode, shippingMethod);
 
     if (amountData.finalAmount <= 0) {
-      return res.status(400).json({
-        success: false,
-        error: "Invalid payable amount",
-      });
+      throw new CheckoutError(400, "INVALID_AMOUNT", "This order has no payable amount.");
+    }
+
+    if (amountData.finalAmount > RAZORPAY_MAX_AMOUNT) {
+      throw new CheckoutError(
+        400,
+        "AMOUNT_TOO_HIGH",
+        `Orders above ₹${RAZORPAY_MAX_AMOUNT.toLocaleString("en-IN")} cannot be paid online. Please reduce the order value or choose Cash on Delivery.`
+      );
     }
 
     const razorpay = getRazorpayInstance();
@@ -173,10 +230,40 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
       discountAmount: amountData.discountAmount,
     });
   } catch (error: any) {
-    console.error("Create Razorpay order error:", error);
-    return res.status(500).json({
+    if (error instanceof CheckoutError) {
+      return res.status(error.status).json({
+        success: false,
+        code: error.code,
+        error: error.message,
+      });
+    }
+
+    console.error("Create Razorpay order error:", {
+      message: getGatewayErrorMessage(error),
+      statusCode: error?.statusCode || error?.status,
+      keyPrefix: razorpayKeyId?.slice(0, 8),
+    });
+
+    if (isGatewayAuthError(error)) {
+      return res.status(502).json({
+        success: false,
+        code: "PAYMENT_GATEWAY_AUTH",
+        error: "Online payment is temporarily unavailable. Please choose Cash on Delivery.",
+      });
+    }
+
+    if (isAmountTooLargeError(error)) {
+      return res.status(400).json({
+        success: false,
+        code: "AMOUNT_TOO_HIGH",
+        error: `Orders above ₹${RAZORPAY_MAX_AMOUNT.toLocaleString("en-IN")} cannot be paid online. Please reduce the order value or choose Cash on Delivery.`,
+      });
+    }
+
+    return res.status(502).json({
       success: false,
-      error: getGatewayErrorMessage(error),
+      code: "PAYMENT_GATEWAY_ERROR",
+      error: "Unable to start the payment right now. Please try again or choose Cash on Delivery.",
     });
   }
 };
@@ -188,18 +275,20 @@ export const verifyRazorpayPayment = async (req: Request, res: Response) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-    } = req.body;
+    } = req.body ?? {};
 
     if (!razorpayKeySecret) {
-      return res.status(500).json({
+      return res.status(503).json({
         success: false,
-        error: "Razorpay key secret is missing on server",
+        code: "PAYMENT_GATEWAY_NOT_CONFIGURED",
+        error: "Online payment is temporarily unavailable. Please choose Cash on Delivery.",
       });
     }
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return res.status(400).json({
         success: false,
+        code: "MISSING_PAYMENT_DETAILS",
         error: "Missing Razorpay payment details",
       });
     }
@@ -224,6 +313,7 @@ export const verifyRazorpayPayment = async (req: Request, res: Response) => {
 
       return res.status(400).json({
         success: false,
+        code: "INVALID_SIGNATURE",
         error: "Invalid payment signature",
       });
     }
@@ -243,6 +333,7 @@ export const verifyRazorpayPayment = async (req: Request, res: Response) => {
     if (updateResult.count === 0) {
       return res.status(404).json({
         success: false,
+        code: "PAYMENT_LOG_NOT_FOUND",
         error: "Payment log not found for this Razorpay order",
       });
     }
@@ -252,10 +343,11 @@ export const verifyRazorpayPayment = async (req: Request, res: Response) => {
       message: "Payment verified successfully",
     });
   } catch (error: any) {
-    console.error("Verify Razorpay payment error:", error);
+    console.error("Verify Razorpay payment error:", error?.message || error);
     return res.status(500).json({
       success: false,
-      error: error.message || "Payment verification failed",
+      code: "PAYMENT_VERIFICATION_FAILED",
+      error: "Payment verification failed. Please contact support if money was deducted.",
     });
   }
 };

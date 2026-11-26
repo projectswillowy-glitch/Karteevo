@@ -51,11 +51,17 @@ const nextConfig: NextConfig = {
     },
   },
   async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const backendBaseUrl = rawApiUrl.replace(/\/api\/?$/, '');
+
     return [
       {
+        source: '/api/auth-admin/:path*',
+        destination: `${backendBaseUrl}/api/auth-admin/:path*`, // Proxy Better-Auth Admin endpoints
+      },
+      {
         source: '/api/:path*',
-        destination: `${apiUrl}/:path*`, // Proxy to Backend
+        destination: `${rawApiUrl}/:path*`, // Proxy API requests to Backend
       },
     ];
   },

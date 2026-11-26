@@ -133,7 +133,7 @@ export const createRazorpayOrder = async (req: Request, res: Response) => {
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
       notes: {
-        userId: (req as any).user.id,
+        userId: (req as any).user?.id || "guest",
         couponCode: couponCode || "",
       },
     });

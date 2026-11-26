@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AuthModal from '@/components/AuthModal';
 import { useCart } from '@/context/CartContext';
 import { authClient } from '@/lib/auth-client';
 import { getApiUrl } from '@/lib/api';
@@ -31,6 +32,7 @@ export default function CheckoutPage() {
   const { data: session } = authClient.useSession();
   const apiUrl = getApiUrl();
 
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [shippingMethod, setShippingMethod] = useState<'standard' | 'express'>('standard');
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'RAZORPAY' | 'UPI'>('RAZORPAY');
   const [couponCode, setCouponCode] = useState('');
@@ -363,6 +365,32 @@ export default function CheckoutPage() {
           <ChevronRight className="w-3.5 h-3.5" />
           <span className="text-slate-900">Secure Checkout</span>
         </div>
+
+        {/* Guest Banner if not signed in */}
+        {!session?.user && (
+          <div className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <Sparkles className="w-4 h-4 text-[#DF9F28]" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-900">
+                  Checking out as a guest?
+                </p>
+                <p className="text-[11px] text-stone-600">
+                  Sign in or create an account to earn 200 welcome coins, track orders in real-time, and auto-save delivery addresses.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAuthModalOpen(true)}
+              className="px-4 py-2 bg-[#0A192F] hover:bg-[#061B3A] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer shrink-0"
+            >
+              Sign In / Register
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Left Form Column */}
@@ -732,6 +760,11 @@ export default function CheckoutPage() {
       </main>
 
       <Footer />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 }

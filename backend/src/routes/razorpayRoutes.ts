@@ -3,11 +3,11 @@ import {
   createRazorpayOrder,
   verifyRazorpayPayment,
 } from "../controllers/razorpayController.js";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { optionalAuthMiddleware } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.use(authMiddleware);
+router.use(optionalAuthMiddleware);
 
 router.post("/create-order", createRazorpayOrder);
 router.post("/verify", verifyRazorpayPayment);

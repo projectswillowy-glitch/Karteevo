@@ -28,6 +28,27 @@ export const authMiddleware = async (
   }
 };
 
+export const optionalAuthMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const session = await webAuth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    });
+
+    if (session && session.user) {
+      (req as any).user = session.user;
+      (req as any).session = session.session;
+    }
+    next();
+  } catch (error) {
+    console.warn("Optional auth error (continuing as guest):", error);
+    next();
+  }
+};
+
 export const adminMiddleware = async (
   req: Request,
   res: Response,

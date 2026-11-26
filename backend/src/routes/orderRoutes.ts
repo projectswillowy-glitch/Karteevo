@@ -7,12 +7,12 @@ import {
     getMyOrders,
     cancelMyOrder
 } from '../controllers/orderController.js';
-import { authMiddleware, adminMiddleware } from '../middleware/authMiddleware.js';
+import { authMiddleware, adminMiddleware, optionalAuthMiddleware } from '../middleware/authMiddleware.js';
 
 const router = Router();
 
-// Customer Order Endpoints (require login)
-router.post('/', authMiddleware, createOrder);
+// Customer Order Endpoints (guest or logged-in)
+router.post('/', optionalAuthMiddleware, createOrder);
 router.get('/my-orders', authMiddleware, getMyOrders);
 router.patch('/:id/cancel', authMiddleware, cancelMyOrder);
 

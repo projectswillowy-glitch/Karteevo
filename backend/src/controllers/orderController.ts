@@ -263,7 +263,6 @@ export const getOrderById = async (req: Request, res: Response) => {
 // POST /api/orders
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const userId = (req as any).user.id;
         const {
             shippingDetails,
             paymentMethod,
@@ -277,6 +276,28 @@ export const createOrder = async (req: Request, res: Response) => {
 
         if (!shippingDetails || !items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: "Missing shipping details or items" });
+        }
+
+        // Determine or create user for this order
+        let userId = (req as any).user?.id;
+        if (!userId) {
+            const customerEmail = (shippingDetails.email || '').trim().toLowerCase() || `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}@karteevo.com`;
+            let existingUser = await prisma.user.findUnique({
+                where: { email: customerEmail }
+            });
+
+            if (!existingUser) {
+                existingUser = await prisma.user.create({
+                    data: {
+                        name: shippingDetails.name || 'Valued Customer',
+                        email: customerEmail,
+                        phone: shippingDetails.phone || null,
+                        emailVerified: false,
+                        role: 'user',
+                    }
+                });
+            }
+            userId = existingUser.id;
         }
 
         const normalizedPaymentMethod = paymentMethod === "Cash on Delivery" ? "COD" : paymentMethod;

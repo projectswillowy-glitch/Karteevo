@@ -433,27 +433,32 @@ export default function ProductTable({ columns }: ProductTableProps) {
           </Card>
 
           {/* Table */}
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader>
               <CardTitle>Products</CardTitle>
               <CardDescription>
-                {`Showing ${((currentPage - 1) * pageSize) + 1}-${Math.min(currentPage * pageSize, pagination.totalCount)} of ${pagination.totalCount} products`}
+                {pagination.totalCount === 0
+                  ? "No products yet"
+                  : `Showing ${((currentPage - 1) * pageSize) + 1}-${Math.min(currentPage * pageSize, pagination.totalCount)} of ${pagination.totalCount} products`}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="relative">
+            <CardContent className="p-0">
+              <div className="relative border-t border-border">
                 {loading && (
-                  <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-[1px]">
                     <div className="text-sm text-muted-foreground">Loading...</div>
                   </div>
                 )}
                 
-                <Table>
-                  <TableHeader>
+                <Table className="min-w-[720px]">
+                  <TableHeader className="bg-muted/40">
                     {table.getHeaderGroups().map((headerGroup) => (
-                      <TableRow key={headerGroup.id}>
+                      <TableRow key={headerGroup.id} className="hover:bg-transparent">
                         {headerGroup.headers.map((header) => (
-                          <TableHead key={header.id}>
+                          <TableHead
+                            key={header.id}
+                            className={`h-11 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground ${(header.column.columnDef.meta as { className?: string } | undefined)?.className ?? ""}`}
+                          >
                             {header.isPlaceholder
                               ? null
                               : flexRender(header.column.columnDef.header, header.getContext())}
@@ -465,9 +470,12 @@ export default function ProductTable({ columns }: ProductTableProps) {
                   <TableBody>
                     {table.getRowModel().rows?.length ? (
                       table.getRowModel().rows.map((row) => (
-                        <TableRow key={row.id}>
+                        <TableRow key={row.id} className="group">
                           {row.getVisibleCells().map((cell) => (
-                            <TableCell key={cell.id}>
+                            <TableCell
+                              key={cell.id}
+                              className={`px-3 py-3 align-middle ${(cell.column.columnDef.meta as { className?: string } | undefined)?.className ?? ""}`}
+                            >
                               {flexRender(cell.column.columnDef.cell, cell.getContext())}
                             </TableCell>
                           ))}
@@ -475,8 +483,8 @@ export default function ProductTable({ columns }: ProductTableProps) {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={columns.length} className="h-24 text-center">
-                          No results found
+                        <TableCell colSpan={columns.length} className="h-28 text-center text-sm text-muted-foreground">
+                          {loading ? "Loading products..." : "No results found"}
                         </TableCell>
                       </TableRow>
                     )}
@@ -485,7 +493,7 @@ export default function ProductTable({ columns }: ProductTableProps) {
               </div>
 
               {/* Pagination Controls */}
-              <div className="flex items-center justify-between space-x-2 py-4">
+              <div className="flex flex-col gap-3 border-t border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center space-x-2">
                   <p className="text-sm font-medium">Rows per page</p>
                   <Select
@@ -505,9 +513,9 @@ export default function ProductTable({ columns }: ProductTableProps) {
                   </Select>
                 </div>
                 
-                <div className="flex items-center space-x-6 lg:space-x-8">
-                  <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                    Page {pagination.currentPage} of {pagination.totalPages}
+                <div className="flex items-center justify-between gap-4 sm:space-x-6">
+                  <div className="flex items-center justify-center whitespace-nowrap text-sm font-medium">
+                    Page {pagination.currentPage} of {Math.max(pagination.totalPages, 1)}
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button

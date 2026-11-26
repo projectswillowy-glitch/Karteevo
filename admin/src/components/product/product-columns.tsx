@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   Edit2,
   Eye,
+  ImageIcon,
   MoreHorizontal,
   Trash2,
 } from "lucide-react";
@@ -33,19 +34,27 @@ import { toast } from "sonner";
 export const productColumns: ColumnDef<ProductDetail>[] = [
   {
     accessorKey: "image",
-    header: "Image",
+    header: "Product",
+    size: 64,
     cell: ({ row }) => {
       const image = row.getValue("image") as string | null;
-      return image ? (
-        <Image
-          src={image}
-          alt="Product"
-          width={40}
-          height={40}
-          className="rounded-md object-cover"
-        />
-      ) : (
-        <span className="text-muted-foreground">No image</span>
+      return (
+        <div className="relative h-11 w-11 overflow-hidden rounded-lg border border-border bg-muted">
+          {image ? (
+            <Image
+              src={image}
+              alt={row.original.name || "Product"}
+              fill
+              sizes="44px"
+              unoptimized
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+              <ImageIcon className="h-4 w-4" />
+            </div>
+          )}
+        </div>
       );
     },
   },
@@ -54,15 +63,17 @@ export const productColumns: ColumnDef<ProductDetail>[] = [
     header: ({ column }) => {
       const sort = column.getIsSorted();
       const renderIcon = () => {
-        if (!sort) return <ArrowUpDown className="size-4" />;
-        if (sort === "asc") return <ArrowUp className="size-4" />;
-        if (sort === "desc") return <ArrowDown className="size-4" />;
+        if (!sort) return <ArrowUpDown className="size-3.5 opacity-60" />;
+        if (sort === "asc") return <ArrowUp className="size-3.5" />;
+        if (sort === "desc") return <ArrowDown className="size-3.5" />;
         return null;
       };
 
       return (
         <Button
           variant="ghost"
+          size="sm"
+          className="-ml-2 h-8 gap-1.5 px-2 font-medium"
           onClick={() => column.toggleSorting(sort === "asc")}
         >
           Name
@@ -70,38 +81,62 @@ export const productColumns: ColumnDef<ProductDetail>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div className="px-3 font-medium">{row.getValue("name") as string}</div>
-    ),
+    cell: ({ row }) => {
+      const variants = row.original.variants || [];
+      return (
+        <div className="min-w-0 max-w-[220px]">
+          <p className="truncate font-medium text-foreground" title={row.original.name}>
+            {row.original.name}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {variants.length} variant{variants.length === 1 ? "" : "s"}
+          </p>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "description",
     header: "Description",
+    meta: { className: "hidden xl:table-cell" },
     cell: ({ row }) => {
       const desc = row.getValue("description") as string | null;
-      const text = desc || "-";
-      const truncated = text.length > 60 ? `${text.slice(0, 60)}…` : text;
-      return <div className="max-w-sm text-muted-foreground">{truncated}</div>;
+      if (!desc) return <span className="text-xs text-muted-foreground">—</span>;
+      return (
+        <p
+          className="line-clamp-2 max-w-[200px] text-xs leading-relaxed text-muted-foreground"
+          title={desc}
+        >
+          {desc}
+        </p>
+      );
     },
   },
   {
     accessorKey: "price",
-    header: "Price",
+    header: () => <div className="text-right">Price</div>,
     cell: ({ row }) => {
       const variants = row.original.variants || [];
-      if (variants.length === 0) return <div className="font-medium text-muted-foreground">-</div>;
-      
-      const prices = variants.map(v => v.price).filter(p => typeof p === 'number');
-      if (prices.length === 0) return <div className="font-medium text-muted-foreground">-</div>;
-      
+      const prices = variants.map((v) => v.price).filter((p) => typeof p === "number");
+      if (prices.length === 0) {
+        return <div className="text-right text-sm text-muted-foreground">—</div>;
+      }
+
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
-      
-      const displayPrice = minPrice === maxPrice 
-        ? formatCurrency(minPrice)
-        : `${formatCurrency(minPrice)} - ${formatCurrency(maxPrice)}`;
-      
-      return <div className="font-medium text-foreground">{displayPrice}</div>;
+
+      return (
+        <div className="whitespace-nowrap text-right">
+          <div className="font-semibold tabular-nums text-foreground">
+            {formatCurrency(minPrice)}
+          </div>
+          {minPrice !== maxPrice && (
+            <div className="text-xs tabular-nums text-muted-foreground">
+              to {formatCurrency(maxPrice)}
+            </div>
+          )}
+        </div>
+      );
     },
   },
   {
@@ -110,13 +145,22 @@ export const productColumns: ColumnDef<ProductDetail>[] = [
     cell: ({ row }) => {
       const variants = row.original.variants || [];
       const qty = variants.reduce((sum, v) => sum + (v.qty || 0), 0);
+      if (variants.length === 0) {
+        return (
+          <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400">
+            Out of stock
+          </span>
+        );
+      }
       return (
         <span
-          className={`${
-            qty > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-          } font-semibold`}
+          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+            qty > 0
+              ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400"
+              : "border border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+          }`}
         >
-          {variants.length > 0 ? `${qty} in stock (${variants.length} variant${variants.length > 1 ? 's' : ''})` : "Out of stock"}
+          {qty > 0 ? `${qty} in stock` : "Out of stock"}
         </span>
       );
     },
@@ -124,21 +168,36 @@ export const productColumns: ColumnDef<ProductDetail>[] = [
   {
     accessorKey: "brand",
     header: "Brand",
-    cell: ({ row }) => row.original.brand?.name || "-",
+    meta: { className: "hidden 2xl:table-cell" },
+    cell: ({ row }) => (
+      <span className="block max-w-[110px] truncate text-sm">
+        {row.original.brand?.name || "—"}
+      </span>
+    ),
   },
   {
     accessorKey: "category",
     header: "Category",
-    cell: ({ row }) => row.original.category?.name || "-",
+    meta: { className: "hidden lg:table-cell" },
+    cell: ({ row }) => (
+      <span className="block max-w-[120px] truncate text-sm">
+        {row.original.category?.name || "—"}
+      </span>
+    ),
   },
   {
     accessorKey: "subcategory",
     header: "Subcategory",
-    cell: ({ row }) => row.original.subCategory?.name || "-",
+    meta: { className: "hidden 2xl:table-cell" },
+    cell: ({ row }) => (
+      <span className="block max-w-[120px] truncate text-sm">
+        {row.original.subCategory?.name || "—"}
+      </span>
+    ),
   },
-  // Removed attributes column due to variant model
   {
     id: "action",
+    size: 48,
     cell: ({ row }) => {
       return row.original && <ProductDropdownMenu product={row.original} />;
     },

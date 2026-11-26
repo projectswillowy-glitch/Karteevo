@@ -52,6 +52,17 @@ export default function CheckoutPage() {
     pincode: '',
   });
 
+  // Keep form data synced when session loads asynchronously
+  useEffect(() => {
+    if (session?.user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: prev.fullName || session.user.name || '',
+        email: prev.email || session.user.email || '',
+      }));
+    }
+  }, [session]);
+
   const appliedDiscount = appliedCoupon?.discountAmount || 0;
   const shippingCost = shippingMethod === 'express' ? 199 : (totalPrice > 1999 ? 0 : 99);
   const finalTotal = Math.max(0, totalPrice + shippingCost - appliedDiscount);

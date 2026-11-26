@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,6 +30,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const router = useRouter();
 
   // Fetch and populate product data
   useEffect(() => {
@@ -45,11 +47,11 @@ function EditProductFormContent({ productId }: { productId: string }) {
           setBaseProduct({
             name: product.name,
             description: product.description || "",
-            mainImage: product.image, // URL string
+            mainImage: product.image, // URL string (or data URL for legacy uploads)
+            thumbnails: product.subimage || [], // existing subimages (old images)
             basePrice: product.variants[0]?.price || 0,
             baseQuantity: product.variants.reduce((sum, v) => sum + v.qty, 0),
             baseDiscountPrice: product.variants[0]?.offerPrice || 0,
-            thumbnails: [], // Assuming subimages were handled differently or not present in schema
             brandId: product.brandId,
             categoryId: product.categoryId || "",
             subCategoryId: product.subCategoryId || "",
@@ -160,9 +162,22 @@ function EditProductFormContent({ productId }: { productId: string }) {
       // Handle main image (new File or existing URL)
       if (baseProduct.mainImage instanceof File) {
         formData.append("mainImage", baseProduct.mainImage);
-      } else {
+      } else if (baseProduct.mainImage) {
         formData.append("existingMainImage", baseProduct.mainImage);
       }
+
+      // Handle thumbnails (new Files and existing URLs)
+      const existingThumbnails = baseProduct.thumbnails.filter(
+        (t): t is string => typeof t === "string"
+      );
+      formData.append("existingThumbnails", JSON.stringify(existingThumbnails));
+
+      const newThumbnails = baseProduct.thumbnails.filter(
+        (t): t is File => t instanceof File
+      );
+      newThumbnails.forEach((file, index) => {
+        formData.append(`thumbnails[${index}]`, file);
+      });
 
       // Prepare variants data
       const variantsData = variants.map((v) => ({
@@ -220,6 +235,8 @@ function EditProductFormContent({ productId }: { productId: string }) {
       }
 
       toast.success("Product updated successfully!");
+      router.push("/products");
+      router.refresh();
     } catch (error) {
       console.error("Error updating product:", error);
       toast.error(

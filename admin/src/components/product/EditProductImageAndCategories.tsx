@@ -187,6 +187,7 @@ export default function EditProductImageAndCategories() {
                     width={500}
                     height={500}
                     className="w-full h-full object-cover rounded-lg"
+                    unoptimized
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full w-full text-gray-400 gap-1">
@@ -244,6 +245,7 @@ export default function EditProductImageAndCategories() {
                     width={64}
                     height={64}
                     className="w-full h-full object-cover rounded"
+                    unoptimized
                   />
                   <Button
                     variant="ghost"

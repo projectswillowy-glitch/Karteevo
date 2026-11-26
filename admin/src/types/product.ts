@@ -107,6 +107,10 @@ export type VariantDetail = {
   sku: string;
   price: number;
   offerPrice?: number | null;
+  purchasePrice?: number | null;
+  purchasePriceInc?: number | null;
+  margin?: number | null;
+  sellingPriceInc?: number | null;
   qty: number;
   images: string[];
   createdAt: Date;

@@ -17,9 +17,14 @@ export interface EditBaseProductData {
 
 export interface EditVariantData {
   id: string;
+  sku?: string;
   price?: number;
   qty?: number;
   offerPrice?: number;
+  purchasePrice?: number;
+  purchasePriceInc?: number;
+  margin?: number;
+  sellingPriceInc?: number;
   images: (File | string)[]; // Can be URLs (existing) or Files (new)
   attributes: {
     attributeId: string;

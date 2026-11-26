@@ -5,18 +5,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  ArrowLeft,
   ArrowRight,
-  Star,
   ShieldCheck,
   Truck,
   RotateCcw,
   Check,
   ShoppingBag,
   Heart,
-  Search,
-  Filter,
-  X,
   SlidersHorizontal,
   ChevronDown,
   ChevronLeft,
@@ -24,13 +19,7 @@ import {
   ZoomIn,
   Share2,
   Scale,
-  Trophy,
-  Crown,
-  Ruler,
   AlertCircle,
-  Tag,
-  Sparkles,
-  Plus,
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -65,8 +54,6 @@ interface ProductSummary {
   image: string;
   subimage?: string[];
   description?: string;
-  rating?: number;
-  reviewsCount?: number;
   isNewArrival?: boolean;
   isCustomerFavorite?: boolean;
 }
@@ -76,113 +63,6 @@ const PRICE_RANGES = [
   { label: '₹2,000 - ₹5,000', value: '2000-5000' },
   { label: '₹5,000 - ₹10,000', value: '5000-10000' },
   { label: 'Above ₹10,000', value: '10000-999999' },
-];
-
-const DEFAULT_FALLBACK_PRODUCTS: ProductSummary[] = [
-  {
-    id: 'prod-1',
-    name: 'The Oversized Double-Breasted Cocoon Coat',
-    category: 'Apparel',
-    brand: 'Karteevo',
-    image: '/prod_overshirt_1778670536589.png',
-    subimage: [
-      '/prod_overshirt_1778670536589.png',
-      '/cat_apparel_1778670103427.png',
-      '/about_craftsmanship.png',
-    ],
-    description: 'An architectural winter staple with dropped shoulders, sharp peak lapels, and deep welt pockets. Engineered to provide warmth down to -10°C with an effortless silhouette.',
-    isNewArrival: true,
-    isCustomerFavorite: true,
-    price: 58820,
-    originalPrice: 68335,
-    rating: 4.9,
-    reviewsCount: 19,
-  },
-  {
-    id: 'prod-2',
-    name: 'The Mongolian Cashmere Cardigan',
-    category: 'Apparel',
-    brand: 'Karteevo',
-    image: '/cat_apparel_1778670103427.png',
-    subimage: [
-      '/cat_apparel_1778670103427.png',
-      '/prod_overshirt_1778670536589.png',
-    ],
-    description: 'Pure 2-ply grade-A cashmere cardigan with custom horn buttons and ribbed trim.',
-    isCustomerFavorite: true,
-    price: 29410,
-    originalPrice: 36330,
-    rating: 4.9,
-    reviewsCount: 48,
-  },
-  {
-    id: 'prod-3',
-    name: 'The Meridian Merino Wool Utility Overshirt',
-    category: 'Apparel',
-    brand: 'Karteevo',
-    image: '/prod_overshirt_1778670536589.png',
-    subimage: [
-      '/prod_overshirt_1778670536589.png',
-      '/cat_leather_1778670351299.webp',
-    ],
-    description: 'Fine spun merino wool overshirt with reinforced twin chest pockets and tailored seams.',
-    isNewArrival: true,
-    price: 24220,
-    originalPrice: 28500,
-    rating: 4.8,
-    reviewsCount: 36,
-  },
-  {
-    id: 'prod-4',
-    name: 'Heritage Full-Grain Leather Briefcase',
-    category: 'Leather Goods',
-    brand: 'Karteevo',
-    image: '/cat_leather_1778670351299.webp',
-    subimage: [
-      '/cat_leather_1778670351299.webp',
-      '/about_craftsmanship.png',
-    ],
-    description: 'Artisan vegetable-tanned leather briefcase with solid brass lock hardware and padded laptop sleeve.',
-    isCustomerFavorite: true,
-    price: 8499,
-    originalPrice: 10499,
-    rating: 4.9,
-    reviewsCount: 84,
-  },
-  {
-    id: 'prod-5',
-    name: 'Minimalist Burnished Leather Bifold Wallet',
-    category: 'Accessories',
-    brand: 'Karteevo',
-    image: '/cat_accessories_1778670517925.png',
-    subimage: [
-      '/cat_accessories_1778670517925.png',
-      '/cat_leather_1778670351299.webp',
-    ],
-    description: 'Top grain burnished leather bifold featuring RFID blocking protective weave and 8 card slots.',
-    isNewArrival: true,
-    price: 1999,
-    originalPrice: 2499,
-    rating: 4.9,
-    reviewsCount: 215,
-  },
-  {
-    id: 'prod-6',
-    name: 'The Voyager Full-Grain Leather Weekender Duffel',
-    category: 'Leather Goods',
-    brand: 'Karteevo',
-    image: '/about_craftsmanship.png',
-    subimage: [
-      '/about_craftsmanship.png',
-      '/cat_leather_1778670351299.webp',
-    ],
-    description: 'Spacious handcrafted weekend duffel crafted from full-grain pull-up leather with detachable shoulder strap.',
-    isCustomerFavorite: true,
-    price: 14999,
-    originalPrice: 17999,
-    rating: 4.9,
-    reviewsCount: 62,
-  },
 ];
 
 // A variant's attribute values as a plain { attributeName: value } map, so the
@@ -314,15 +194,7 @@ function ProductContent() {
 
   // Accordion states
   const [openAccordions, setOpenAccordions] = useState<{ [key: string]: boolean }>({
-    craftsmanship: true,
     shipping: false,
-    reviews: false,
-  });
-
-  // Frequently Bought Together Bundle State
-  const [bundleAddons, setBundleAddons] = useState<{ [key: number]: boolean }>({
-    1: true,
-    2: true,
   });
 
   // Catalog Filters State
@@ -366,14 +238,7 @@ function ProductContent() {
         }
       })
       .catch(() => {
-        setCategoriesList([
-          { id: '1', name: 'Apparel' },
-          { id: '2', name: 'Leather Goods' },
-          { id: '3', name: 'Accessories' },
-          { id: '4', name: 'Footwear' },
-          { id: '5', name: 'Electronics' },
-          { id: '6', name: 'Home & Living' },
-        ]);
+        setCategoriesList([]);
       });
   }, []);
 
@@ -387,20 +252,20 @@ function ProductContent() {
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
           const mapped: ProductSummary[] = res.data.map((p: any) => {
             const firstVariant = p.variants?.[0];
-            const priceVal = Number(firstVariant?.offerPrice || firstVariant?.price || p.price || 2999);
+            const priceVal = Number(firstVariant?.offerPrice || firstVariant?.price || p.price || 0);
             const origPriceVal = firstVariant?.offerPrice && firstVariant.price > firstVariant.offerPrice ? firstVariant.price : undefined;
             return {
               id: p.id,
               variantId: firstVariant?.id,
               variants: p.variants,
               name: p.name,
-              category: p.category?.name || 'Apparel',
+              category: p.category?.name || 'Uncategorized',
               brand: p.brand?.name || 'Karteevo',
               price: priceVal,
               originalPrice: origPriceVal,
-              image: p.image || p.images?.[0] || '/prod_overshirt_1778670536589.png',
-              subimage: p.subimage && p.subimage.length > 0 ? p.subimage : (p.images && p.images.length > 0 ? p.images : ['/prod_overshirt_1778670536589.png', '/cat_apparel_1778670103427.png']),
-              description: p.description || 'Crafted with premium natural materials and master tailoring techniques.',
+              image: p.image || p.images?.[0] || '',
+              subimage: p.subimage && p.subimage.length > 0 ? p.subimage : (p.images || []),
+              description: p.description || '',
               isNewArrival: p.isNewArrival || false,
               isCustomerFavorite: p.isCustomerFavorite || false,
             };
@@ -409,12 +274,12 @@ function ProductContent() {
             setAllProducts(mapped);
           }
         } else if (isMounted) {
-          setAllProducts(DEFAULT_FALLBACK_PRODUCTS);
+          setAllProducts([]);
         }
       })
       .catch(() => {
         if (isMounted) {
-          setAllProducts(DEFAULT_FALLBACK_PRODUCTS);
+          setAllProducts([]);
         }
       })
       .finally(() => {
@@ -450,19 +315,19 @@ function ProductContent() {
           if (res.data) {
             const p = res.data;
             const firstVariant = p.variants?.[0];
-            const priceVal = Number(firstVariant?.offerPrice || firstVariant?.price || p.price || 2999);
-            const origPriceVal = Number(firstVariant?.offerPrice ? firstVariant.price : (p.originalPrice || Math.round(priceVal * 1.2)));
+            const priceVal = Number(firstVariant?.offerPrice || firstVariant?.price || p.price || 0);
+            const origPriceVal = firstVariant?.offerPrice && firstVariant.price > firstVariant.offerPrice ? firstVariant.price : p.originalPrice;
             setSelectedProduct({
               id: p.id,
               variantId: firstVariant?.id,
               variants: p.variants,
               name: p.name,
-              category: p.category?.name || 'Apparel',
+              category: p.category?.name || 'Uncategorized',
               brand: p.brand?.name || 'Karteevo',
               price: priceVal,
               originalPrice: origPriceVal,
-              image: p.image || p.images?.[0] || '/prod_overshirt_1778670536589.png',
-              subimage: p.subimage && p.subimage.length > 0 ? p.subimage : (p.images && p.images.length > 0 ? p.images : ['/prod_overshirt_1778670536589.png', '/cat_apparel_1778670103427.png']),
+              image: p.image || p.images?.[0] || '',
+              subimage: p.subimage && p.subimage.length > 0 ? p.subimage : (p.images || []),
               description: p.description,
               isNewArrival: p.isNewArrival,
               isCustomerFavorite: p.isCustomerFavorite,
@@ -480,17 +345,6 @@ function ProductContent() {
         });
     }
   }, [selectedId, allProducts]);
-
-  // Gallery Images Array
-  const currentImages = useMemo(() => {
-    if (!selectedProduct) return [];
-    if (selectedProduct.subimage && selectedProduct.subimage.length > 0) {
-      return selectedProduct.subimage;
-    }
-    return [selectedProduct.image, '/cat_apparel_1778670103427.png', '/about_craftsmanship.png'];
-  }, [selectedProduct]);
-
-  const activeImageSrc = currentImages[activeImageIndex] || selectedProduct?.image || '/prod_overshirt_1778670536589.png';
 
   // Variations come from the product's own variants, so the page shows the real
   // attribute values (including a single "All" option) instead of a fixed list.
@@ -548,6 +402,22 @@ function ProductContent() {
     selectedVariant?.offerPrice && selectedVariant.price > selectedVariant.offerPrice
       ? selectedVariant.price
       : selectedProduct?.originalPrice;
+
+  // Gallery: the selected variant's own images come first, then the product
+  // gallery, so changing a variation changes the picture shown.
+  const currentImages = useMemo(() => {
+    if (!selectedProduct) return [];
+    const variantImages = (selectedVariant?.images || []).filter(Boolean);
+    const productImages = [...(selectedProduct.subimage || []), selectedProduct.image].filter(Boolean);
+    return Array.from(new Set([...variantImages, ...productImages]));
+  }, [selectedProduct, selectedVariant]);
+
+  const activeImageSrc = currentImages[activeImageIndex] || currentImages[0] || '';
+
+  // A new variation starts from its own first image.
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [selectedVariant?.id]);
 
   const optionValue = (name: string) => {
     const key = Object.keys(selectedOptionMap).find((k) => k.toLowerCase() === name);
@@ -612,8 +482,8 @@ function ProductContent() {
         id: selectedProduct.id,
         productId: selectedProduct.id,
         variantId: activeVariantId,
-        size: optionValue('size') || 'All',
-        color: optionValue('color') || optionValue('colour') || 'All',
+        size: optionValue('size') || '',
+        color: optionValue('color') || optionValue('colour') || '',
         name: optionSummary ? `${selectedProduct.name} (${optionSummary})` : selectedProduct.name,
         price: unitPrice,
         image: activeImageSrc,
@@ -639,58 +509,6 @@ function ProductContent() {
       navigator.clipboard.writeText(window.location.href);
       showToast('Product link copied to clipboard');
     }
-  };
-
-  // Bundle Calculations
-  const bundleAddon1 = allProducts.find((p) => String(p.id) === 'prod-2') || DEFAULT_FALLBACK_PRODUCTS[1];
-  const bundleAddon2 = allProducts.find((p) => String(p.id) === 'prod-3') || DEFAULT_FALLBACK_PRODUCTS[2];
-
-  const bundleTotalRaw = useMemo(() => {
-    let total = unitPrice;
-    if (bundleAddons[1]) total += bundleAddon1.price;
-    if (bundleAddons[2]) total += bundleAddon2.price;
-    return total;
-  }, [unitPrice, bundleAddons, bundleAddon1, bundleAddon2]);
-
-  const bundleDiscount = Math.round(bundleTotalRaw * 0.15);
-  const bundleFinalPrice = bundleTotalRaw - bundleDiscount;
-  const bundleCount = 1 + (bundleAddons[1] ? 1 : 0) + (bundleAddons[2] ? 1 : 0);
-
-  const handleAddBundleToCart = () => {
-    if (selectedProduct) {
-      addToCart({
-        id: selectedProduct.id,
-        productId: selectedProduct.id,
-        variantId: selectedProduct.variantId || selectedProduct.variants?.[0]?.id,
-        name: selectedProduct.name,
-        price: unitPrice,
-        image: selectedProduct.image,
-        category: selectedProduct.category,
-      });
-    }
-    if (bundleAddons[1]) {
-      addToCart({
-        id: bundleAddon1.id,
-        productId: bundleAddon1.id,
-        variantId: bundleAddon1.variantId || bundleAddon1.variants?.[0]?.id,
-        name: bundleAddon1.name,
-        price: bundleAddon1.price,
-        image: bundleAddon1.image,
-        category: bundleAddon1.category,
-      });
-    }
-    if (bundleAddons[2]) {
-      addToCart({
-        id: bundleAddon2.id,
-        productId: bundleAddon2.id,
-        variantId: bundleAddon2.variantId || bundleAddon2.variants?.[0]?.id,
-        name: bundleAddon2.name,
-        price: bundleAddon2.price,
-        image: bundleAddon2.image,
-        category: bundleAddon2.category,
-      });
-    }
-    showToast(`Added ${bundleCount} bundle items to bag with 15% savings!`);
   };
 
   // Filter & Search Logic for Catalog View
@@ -842,17 +660,21 @@ function ProductContent() {
                     onMouseEnter={() => setIsZoomed(true)}
                     onMouseLeave={() => setIsZoomed(false)}
                   >
-                    <Image
-                      src={activeImageSrc}
-                      alt={`${selectedProduct.name} full view`}
-                      fill
-                      priority
-                      unoptimized
-                      sizes="(max-width: 1024px) 100vw, 55vw"
-                      className={`object-cover transition-transform duration-300 ${
-                        isZoomed ? 'scale-125' : 'scale-100'
-                      }`}
-                    />
+                    {activeImageSrc ? (
+                      <Image
+                        src={activeImageSrc}
+                        alt={`${selectedProduct.name} full view`}
+                        fill
+                        priority
+                        unoptimized
+                        sizes="(max-width: 1024px) 100vw, 55vw"
+                        className={`object-cover transition-transform duration-300 ${isZoomed ? 'scale-125' : 'scale-100'}`}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-[#F8FAFC] text-slate-300">
+                        <ShoppingBag className="h-12 w-12" />
+                      </div>
+                    )}
 
                     {/* Floating Zoom Badge */}
                     <div className="absolute bottom-3 right-3 z-10 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-[#555555] text-[11px] font-medium border border-slate-200 pointer-events-none flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shadow-2xs">
@@ -891,14 +713,11 @@ function ProductContent() {
               {/* RIGHT COLUMN: Purchasing & Product Specifications */}
               <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
                 
-                {/* Header: Category, Status Badge & Title */}
+                {/* Category & Title */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs uppercase tracking-widest font-bold text-[#DF9F28]">
                       {selectedProduct.category}
-                    </span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-[#FEF8EE] text-[#DF9F28] border border-[#DF9F28]/30">
-                      Limited Edition
                     </span>
                   </div>
 
@@ -906,7 +725,7 @@ function ProductContent() {
                     {selectedProduct.name}
                   </h1>
 
-                  {/* Price & Star Ratings Row */}
+                  {/* Price */}
                   <div className="flex items-center gap-4 pt-1">
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl sm:text-3xl font-bold text-[#111111]">
@@ -918,68 +737,15 @@ function ProductContent() {
                         </span>
                       )}
                     </div>
-
-                    <span className="text-slate-300">•</span>
-
-                    <div className="inline-flex items-center gap-1.5">
-                      <div className="flex items-center gap-0.5 text-[#DF9F28]">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-[#DF9F28] text-[#DF9F28]" />
-                        ))}
-                      </div>
-                      <span className="text-xs font-bold text-[#111111]">{selectedProduct.rating || 4.9}</span>
-                      <span className="text-xs text-[#888888]">({selectedProduct.reviewsCount || 19})</span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Material Intro & Description */}
-                <div className="space-y-2 text-xs sm:text-sm text-[#555555] leading-relaxed pt-1 border-t border-slate-200">
-                  <p className="font-semibold text-[#111111]">
-                    100% virgin Melton wool with cupro lining
-                  </p>
-                  <p>
-                    {selectedProduct.description ||
-                      'An architectural winter staple with dropped shoulders, sharp peak lapels, and deep welt pockets. Engineered to provide warmth down to -10°C with an effortless silhouette.'}
-                  </p>
-                </div>
-
-                {/* KARTEEVO LUCKY DRAW REWARDS CARD */}
-                <div className="p-4 rounded-2xl bg-[#FEF8EE] border border-[#DF9F28]/30 shadow-xs space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs font-black text-[#111111] uppercase tracking-wider">
-                      <Trophy className="w-4 h-4 text-[#DF9F28]" />
-                      <span>Karteevo Lucky Draw Rewards</span>
-                    </div>
-                    <Link href="/lucky-draw" className="text-[11px] font-bold text-[#DF9F28] hover:text-[#C6891E] hover:underline">
-                      Draw Rules &amp; Schedule →
-                    </Link>
+                {/* Description */}
+                {selectedProduct.description && (
+                  <div className="space-y-2 text-xs sm:text-sm text-[#555555] leading-relaxed pt-1 border-t border-slate-200">
+                    <p>{selectedProduct.description}</p>
                   </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-start gap-2 p-2 rounded-xl bg-white border border-[#DF9F28]/30 text-[#111111]">
-                      <span className="text-base leading-none">🎟️</span>
-                      <div>
-                        <strong className="block font-bold">Qualifies for Platinum Draw</strong>
-                        <span className="text-[11px] text-[#555555]">
-                          This purchase automatically generates a Platinum Ticket for the monthly luxury gadget draw.
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-[#DF9F28]/30 text-[#111111]">
-                      <Crown className="w-4 h-4 text-[#DF9F28] mt-0.5 shrink-0" />
-                      <div>
-                        <strong className="block font-extrabold text-[#111111]">
-                          Official Brand JUDES: Mega Bumper Draw Token!
-                        </strong>
-                        <span className="text-[11px] text-[#555555]">
-                          Includes automatic entry into the 6–12 month Grand Bumper Draw for luxury vehicles &amp; ₹5,00,000 cash!
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Variation Selectors (values come from the product's variants) */}
                 <div className="pt-2 border-t border-slate-200 space-y-5">
@@ -992,7 +758,6 @@ function ProductContent() {
                     variationGroups.map((group) => {
                       const currentValue = selectedOptionMap[group.name] || '';
                       const isColorGroup = /colou?r/i.test(group.name);
-                      const isSizeGroup = /size/i.test(group.name);
                       const remaining = typeof selectedVariant?.qty === 'number' ? selectedVariant.qty : undefined;
 
                       return (
@@ -1013,16 +778,6 @@ function ProductContent() {
                               )}
                             </div>
 
-                            {isSizeGroup && (
-                              <button
-                                type="button"
-                                onClick={() => toggleAccordion('craftsmanship')}
-                                className="flex shrink-0 items-center gap-1 text-[11px] font-semibold text-[#DF9F28] underline transition-colors hover:text-[#C6891E] cursor-pointer"
-                              >
-                                <Ruler className="w-3.5 h-3.5" />
-                                <span>Size Guide</span>
-                              </button>
-                            )}
                           </div>
 
                           {isColorGroup ? (
@@ -1178,283 +933,36 @@ function ProductContent() {
                   </div>
                 </div>
 
-                {/* Collapsible Accordions */}
-                <div className="pt-2">
-                  <div className="divide-y divide-slate-200 border-t border-b border-slate-200">
-                    
-                    {/* Accordion 1: Details & Craftsmanship */}
-                    <div className="py-1">
-                      <button
-                        type="button"
-                        onClick={() => toggleAccordion('craftsmanship')}
-                        className="flex items-center justify-between w-full py-4 text-left group cursor-pointer"
-                        aria-expanded={openAccordions.craftsmanship}
-                      >
-                        <span className="text-sm font-semibold text-[#111111] group-hover:text-[#DF9F28] transition-colors">
-                          Details &amp; Craftsmanship
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 text-[#888888] group-hover:text-[#DF9F28] transition-transform duration-200 ${
-                            openAccordions.craftsmanship ? 'rotate-180 text-[#DF9F28]' : ''
-                          }`}
-                        />
-                      </button>
-                      {openAccordions.craftsmanship && (
-                        <div className="pb-5 pt-1 text-xs text-[#555555] leading-relaxed space-y-2.5 animate-in fade-in-50 duration-150">
-                          <p><strong className="text-[#111111]">Materials:</strong> 100% Heavy Virgin Melton Wool (650g/m²), 100% Bemberg Cupro lining</p>
-                          <p><strong className="text-[#111111]">Provenance:</strong> Crafted with Master Tailoring in Lyon, France</p>
-                          <p><strong className="text-[#111111]">Care Instructions:</strong> Specialist dry clean only. Steam gently.</p>
-                          <p><strong className="text-[#111111]">Environmental Integrity:</strong> Responsible Wool Standard (RWS) certified ethical shearing.</p>
-                        </div>
-                      )}
+                {/* Shipping & Returns */}
+                <div className="border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion('shipping')}
+                    className="flex w-full items-center justify-between py-4 text-left group cursor-pointer"
+                    aria-expanded={openAccordions.shipping}
+                  >
+                    <span className="text-sm font-semibold text-[#111111] group-hover:text-[#DF9F28] transition-colors">
+                      Shipping &amp; Returns
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#888888] group-hover:text-[#DF9F28] transition-transform duration-200 ${
+                        openAccordions.shipping ? 'rotate-180 text-[#DF9F28]' : ''
+                      }`}
+                    />
+                  </button>
+                  {openAccordions.shipping && (
+                    <div className="pb-5 pt-1 text-xs text-[#555555] leading-relaxed space-y-2 animate-in fade-in-50 duration-150">
+                      <p>Complimentary express courier shipping across India on all verified customer orders above ₹999.</p>
+                      <p>Dispatch occurs within 24–48 business hours with live end-to-end SMS tracking updates.</p>
+                      <p>Hassle-free 30-day exchange window for sizing and silhouette tailoring preferences.</p>
                     </div>
-
-                    {/* Accordion 2: Complimentary Shipping & Returns */}
-                    <div className="py-1">
-                      <button
-                        type="button"
-                        onClick={() => toggleAccordion('shipping')}
-                        className="flex items-center justify-between w-full py-4 text-left group cursor-pointer"
-                        aria-expanded={openAccordions.shipping}
-                      >
-                        <span className="text-sm font-semibold text-[#111111] group-hover:text-[#DF9F28] transition-colors">
-                          Complimentary Shipping &amp; Returns
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 text-[#888888] group-hover:text-[#DF9F28] transition-transform duration-200 ${
-                            openAccordions.shipping ? 'rotate-180 text-[#DF9F28]' : ''
-                          }`}
-                        />
-                      </button>
-                      {openAccordions.shipping && (
-                        <div className="pb-5 pt-1 text-xs text-[#555555] leading-relaxed space-y-2 animate-in fade-in-50 duration-150">
-                          <p>Complimentary express courier shipping across India on all verified customer orders above ₹999.</p>
-                          <p>Dispatch occurs within 24–48 business hours with live end-to-end SMS tracking updates.</p>
-                          <p>Hassle-free 30-day exchange window for sizing and silhouette tailoring preferences.</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Accordion 3: Client Reviews */}
-                    <div className="py-1">
-                      <button
-                        type="button"
-                        onClick={() => toggleAccordion('reviews')}
-                        className="flex items-center justify-between w-full py-4 text-left group cursor-pointer"
-                        aria-expanded={openAccordions.reviews}
-                      >
-                        <span className="text-sm font-semibold text-[#111111] group-hover:text-[#DF9F28] transition-colors">
-                          Client Reviews ({selectedProduct.reviewsCount || 19})
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 text-[#888888] group-hover:text-[#DF9F28] transition-transform duration-200 ${
-                            openAccordions.reviews ? 'rotate-180 text-[#DF9F28]' : ''
-                          }`}
-                        />
-                      </button>
-                      {openAccordions.reviews && (
-                        <div className="pb-5 pt-1 text-xs text-[#555555] leading-relaxed space-y-3 animate-in fade-in-50 duration-150">
-                          <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center gap-3">
-                            <div className="flex items-center gap-1 text-[#DF9F28]">
-                              {[...Array(5)].map((_, i) => (
-                                <Star key={i} className="w-3.5 h-3.5 fill-[#DF9F28]" />
-                              ))}
-                            </div>
-                            <span className="font-bold text-[#111111]">4.9 / 5.0</span>
-                            <span className="text-[#888888]">100% Verified Buyer Rating</span>
-                          </div>
-                          <p className="italic text-[#555555]">
-                            "The fabric weight, drafting, and drape exceed expectation. Fits true to size with effortless elegance." — Rajesh K.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
+                  )}
                 </div>
 
               </div>
 
             </div>
           </div>
-
-          {/* ========================================================================= */}
-          {/* CURATED BUNDLE: Frequently Bought Together                               */}
-          {/* ========================================================================= */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-            <div className="p-6 sm:p-8 rounded-xl bg-white border border-slate-200/90 shadow-sm space-y-6">
-              
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#DF9F28]">
-                    <Tag className="w-3.5 h-3.5" />
-                    <span>Curated Bundle Discount</span>
-                  </div>
-                  <h3 className="font-sans text-xl font-extrabold text-[#111111] mt-0.5">
-                    Frequently Bought Together
-                  </h3>
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FEF8EE] text-[#DF9F28] text-xs font-bold border border-[#DF9F28]/30">
-                  <Sparkles className="w-3.5 h-3.5 text-[#DF9F28]" />
-                  <span>Save 15% on this combined bundle</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                
-                {/* Bundle Items Selector */}
-                <div className="lg:col-span-8 flex flex-wrap items-center gap-3 sm:gap-4">
-                  
-                  {/* Item 1: Main Product */}
-                  <div className="relative p-3 rounded-2xl border-2 border-[#DF9F28] bg-[#FEF8EE]/50 shadow-xs flex flex-col items-center w-36 sm:w-44 text-center group">
-                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-white mb-2.5">
-                      <Image
-                        src={selectedProduct.image}
-                        alt={selectedProduct.name}
-                        fill
-                        unoptimized
-                        className="object-cover group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    <div className="w-full flex items-center justify-center gap-1.5 mb-1">
-                      <input
-                        type="checkbox"
-                        checked
-                        disabled
-                        className="rounded border-slate-300 text-[#DF9F28] focus:ring-[#DF9F28] accent-[#DF9F28] cursor-pointer"
-                      />
-                      <span className="text-[10px] uppercase font-bold text-[#555555] truncate">
-                        This Item
-                      </span>
-                    </div>
-                    <h4 className="text-xs font-bold text-[#111111] line-clamp-1 w-full">
-                      {selectedProduct.name}
-                    </h4>
-                    <span className="text-xs font-black text-[#DF9F28] mt-0.5">
-                      ₹{unitPrice.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold shrink-0">
-                    <Plus className="w-4 h-4" />
-                  </div>
-
-                  {/* Item 2: Addon 1 */}
-                  <div
-                    onClick={() => setBundleAddons((p) => ({ ...p, 1: !p[1] }))}
-                    className={`relative p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center w-36 sm:w-44 text-center group ${
-                      bundleAddons[1]
-                        ? 'border-2 border-[#DF9F28] bg-[#FEF8EE]/50 shadow-xs'
-                        : 'border-slate-200 bg-white opacity-60'
-                    }`}
-                  >
-                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-white mb-2.5">
-                      <Image
-                        src={bundleAddon1.image}
-                        alt={bundleAddon1.name}
-                        fill
-                        unoptimized
-                        className="object-cover group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    <div className="w-full flex items-center justify-center gap-1.5 mb-1">
-                      <input
-                        type="checkbox"
-                        checked={bundleAddons[1]}
-                        onChange={() => {}}
-                        className="rounded border-slate-300 text-[#DF9F28] focus:ring-[#DF9F28] accent-[#DF9F28] cursor-pointer"
-                      />
-                      <span className="text-[10px] uppercase font-bold text-[#555555] truncate">
-                        Add-on
-                      </span>
-                    </div>
-                    <h4 className="text-xs font-bold text-[#111111] line-clamp-1 w-full">
-                      {bundleAddon1.name}
-                    </h4>
-                    <span className="text-xs font-black text-[#DF9F28] mt-0.5">
-                      ₹{bundleAddon1.price.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold shrink-0">
-                    <Plus className="w-4 h-4" />
-                  </div>
-
-                  {/* Item 3: Addon 2 */}
-                  <div
-                    onClick={() => setBundleAddons((p) => ({ ...p, 2: !p[2] }))}
-                    className={`relative p-3 rounded-2xl border transition-all cursor-pointer flex flex-col items-center w-36 sm:w-44 text-center group ${
-                      bundleAddons[2]
-                        ? 'border-2 border-[#DF9F28] bg-[#FEF8EE]/50 shadow-xs'
-                        : 'border-slate-200 bg-white opacity-60'
-                    }`}
-                  >
-                    <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-white mb-2.5">
-                      <Image
-                        src={bundleAddon2.image}
-                        alt={bundleAddon2.name}
-                        fill
-                        unoptimized
-                        className="object-cover group-hover:scale-105 transition-transform"
-                      />
-                    </div>
-                    <div className="w-full flex items-center justify-center gap-1.5 mb-1">
-                      <input
-                        type="checkbox"
-                        checked={bundleAddons[2]}
-                        onChange={() => {}}
-                        className="rounded border-slate-300 text-[#DF9F28] focus:ring-[#DF9F28] accent-[#DF9F28] cursor-pointer"
-                      />
-                      <span className="text-[10px] uppercase font-bold text-[#555555] truncate">
-                        Add-on
-                      </span>
-                    </div>
-                    <h4 className="text-xs font-bold text-[#111111] line-clamp-1 w-full">
-                      {bundleAddon2.name}
-                    </h4>
-                    <span className="text-xs font-black text-[#DF9F28] mt-0.5">
-                      ₹{bundleAddon2.price.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-
-                </div>
-
-                {/* Bundle Summary & CTA */}
-                <div className="lg:col-span-4 p-5 rounded-2xl bg-[#F8FAFC] border border-slate-200 space-y-4">
-                  <div className="space-y-1.5 text-xs text-[#555555]">
-                    <div className="flex justify-between">
-                      <span>Selected ({bundleCount} items):</span>
-                      <span className="font-semibold text-[#111111]">
-                        ₹{bundleTotalRaw.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-[#DF9F28] font-bold">
-                      <span>15% Bundle Savings:</span>
-                      <span>-₹{bundleDiscount.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="pt-2 border-t border-slate-200 flex justify-between items-baseline">
-                      <span className="font-bold text-[#111111]">Total Price:</span>
-                      <span className="text-xl font-black text-[#111111]">
-                        ₹{bundleFinalPrice.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleAddBundleToCart}
-                    className="w-full py-3.5 px-4 rounded-xl bg-[#DF9F28] hover:bg-[#C6891E] text-[#111111] text-xs font-bold uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                  >
-                    <ShoppingBag className="w-4 h-4 text-[#111111]" />
-                    <span>Add {bundleCount} Items To Bag</span>
-                  </button>
-                </div>
-
-              </div>
-
-            </div>
-          </section>
 
           {/* ========================================================================= */}
           {/* RELATED & RECOMMENDED PRODUCTS SECTION                                    */}
@@ -1486,8 +994,6 @@ function ProductContent() {
                       price={prod.price}
                       originalPrice={prod.originalPrice}
                       image={prod.image}
-                      rating={prod.rating || 4.9}
-                      reviewsCount={prod.reviewsCount || 112}
                       isNewArrival={prod.isNewArrival}
                       isCustomerFavorite={prod.isCustomerFavorite}
                     />
@@ -1500,21 +1006,23 @@ function ProductContent() {
           <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 shadow-2xl animate-in slide-in-from-bottom-2 duration-200">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative w-11 h-13 rounded-lg overflow-hidden bg-white shrink-0 border border-slate-200">
-                  <Image
-                    src={activeImageSrc}
-                    alt={selectedProduct.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="min-w-0">
+                {activeImageSrc && (
+                  <div className="relative w-11 h-13 rounded-lg overflow-hidden bg-white shrink-0 border border-slate-200">
+                    <Image
+                      src={activeImageSrc}
+                      alt={selectedProduct.name}
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </div>
+                )}                <div className="min-w-0">
                   <p className="text-xs font-sans font-bold text-[#111111] truncate">
                     {selectedProduct.name}
                   </p>
                   <div className="flex items-center gap-2 text-[11px] text-[#555555]">
                     <span className="font-bold text-[#111111]">
-                      ₹{selectedProduct.price.toLocaleString('en-IN')}
+                      ₹{unitPrice.toLocaleString('en-IN')}
                     </span>
                     {optionSummary && (
                       <>
@@ -1744,8 +1252,6 @@ function ProductContent() {
                         price={prod.price}
                         originalPrice={prod.originalPrice}
                         image={prod.image}
-                        rating={prod.rating || 4.9}
-                        reviewsCount={prod.reviewsCount || 88}
                         isNewArrival={prod.isNewArrival}
                         isCustomerFavorite={prod.isCustomerFavorite}
                       />

@@ -8,7 +8,7 @@ import { EditProductProvider, useEditProduct } from "@/context/EcitProductContex
 import type { ProductDetail } from "@/types/product";
 import EditProductFormSection from "./EditProductForm";
 import EditProductImageAndCategories from "./EditProductImageAndCategories";
-import ShopifyVariantsManager from "./ShopifyVariantsManager";
+import ProductVariationsSection from "./ProductVariationsSection";
 import { API_URL } from "@/lib/api-client";
 
 interface EditProductLayoutProps {
@@ -60,9 +60,14 @@ function EditProductFormContent({ productId }: { productId: string }) {
           // Set variants data
           const mappedVariants = product.variants.map((variant) => ({
             id: variant.id,
+            sku: variant.sku,
             price: variant.price,
             qty: variant.qty,
             offerPrice: variant.offerPrice || undefined,
+            purchasePrice: variant.purchasePrice ?? undefined,
+            purchasePriceInc: variant.purchasePriceInc ?? undefined,
+            margin: variant.margin ?? undefined,
+            sellingPriceInc: variant.sellingPriceInc ?? undefined,
             images: variant.images, // URLs
             attributes: variant.options.map((opt) => ({
               attributeId: opt.attributeId,
@@ -162,9 +167,14 @@ function EditProductFormContent({ productId }: { productId: string }) {
       // Prepare variants data
       const variantsData = variants.map((v) => ({
         id: v.isNew ? undefined : v.id, // Include ID for existing variants
+        sku: v.sku,
         price: v.price,
         qty: v.qty,
         offerPrice: v.offerPrice,
+        purchasePrice: v.purchasePrice,
+        purchasePriceInc: v.purchasePriceInc,
+        margin: v.margin,
+        sellingPriceInc: v.sellingPriceInc,
         attributes: v.attributes.map((a) => ({
           attributeId: a.attributeId,
           valueId: a.valueId,
@@ -257,7 +267,7 @@ function EditProductFormContent({ productId }: { productId: string }) {
         </div>
       </div>
 
-      <ShopifyVariantsManager mode="edit" />
+      <ProductVariationsSection mode="edit" />
     </div>
   );
 }

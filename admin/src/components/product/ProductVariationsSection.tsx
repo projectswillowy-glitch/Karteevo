@@ -12,8 +12,14 @@ import {
 } from "@/components/ui/select";
 import {
   useConfigurableProduct,
+  type BaseProductData,
   type VariantData,
 } from "@/context/ConfigurableProductContext";
+import {
+  useEditProduct,
+  type EditBaseProductData,
+  type EditVariantData,
+} from "@/context/EcitProductContext";
 import { apiFetch } from "@/lib/api-client";
 import {
   calculateMarginFromSellingExc,
@@ -45,6 +51,7 @@ interface DbAttribute {
 
 interface VariationRowItem {
   id: string;
+  variantId?: string;
   sku: string;
   valueId: string;
   valueName: string;
@@ -54,7 +61,7 @@ interface VariationRowItem {
   sellingPrice: number; // Exc. tax
   sellingPriceInc: number; // Inc. tax
   stock: number;
-  image: File | null;
+  image: File | string | null;
 }
 
 interface VariationGroup {
@@ -62,6 +69,52 @@ interface VariationGroup {
   variationId: string;
   variationName: string;
   rows: VariationRowItem[];
+}
+
+/* ------------------------------------------------------------------ */
+/* Context adapter                                                     */
+/* The same editor powers the create form and the edit form, so it only */
+/* talks to a small shape both product contexts can provide.            */
+/* ------------------------------------------------------------------ */
+export interface VariationsEditorVariant {
+  id: string;
+  sku?: string;
+  price?: number;
+  qty?: number;
+  offerPrice?: number;
+  purchasePrice?: number;
+  purchasePriceInc?: number;
+  margin?: number;
+  sellingPriceInc?: number;
+  images: (File | string)[];
+  attributes: {
+    attributeId: string;
+    valueId: string;
+    attributeName: string;
+    value: string;
+  }[];
+  isNew?: boolean;
+  isModified?: boolean;
+}
+
+interface VariationsEditorBasePatch {
+  basePrice?: number;
+  baseQuantity?: number;
+  sku?: string;
+  purchasePrice?: number;
+  purchasePriceInc?: number;
+  margin?: number;
+  sellingPriceInc?: number;
+  taxRate?: number;
+  taxType?: TaxType;
+  skuFormat?: SkuFormat;
+  productType?: ProductType;
+}
+
+interface VariationsEditorContext {
+  variants: VariationsEditorVariant[];
+  setVariants: (variants: VariationsEditorVariant[]) => void;
+  updateBaseProduct: (patch: VariationsEditorBasePatch) => void;
 }
 
 /* ------------------------------------------------------------------ */
@@ -175,7 +228,7 @@ function ImageCameraUpload({
   value,
   onChange,
 }: {
-  value: File | null;
+  value: File | string | null;
   onChange: (file: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -184,6 +237,10 @@ function ImageCameraUpload({
   useEffect(() => {
     if (!value) {
       setPreview(null);
+      return;
+    }
+    if (typeof value === "string") {
+      setPreview(value);
       return;
     }
     const url = URL.createObjectURL(value);
@@ -238,13 +295,29 @@ function ImageCameraUpload({
 /* ------------------------------------------------------------------ */
 /* Main Component                                                      */
 /* ------------------------------------------------------------------ */
-export default function ProductVariationsSection() {
-  const { updateBaseProduct, setVariants } = useConfigurableProduct();
+function VariationsEditor({
+  ctx,
+  mode,
+}: {
+  ctx: VariationsEditorContext;
+  mode: "create" | "edit";
+}) {
+  const { updateBaseProduct, setVariants } = ctx;
+  const isEdit = mode === "edit";
+
+  /* Latest variants from the product context, read without re-running the
+     push effect (which would loop) every time that context updates. */
+  const variantsRef = useRef(ctx.variants);
+  useEffect(() => {
+    variantsRef.current = ctx.variants;
+  }, [ctx.variants]);
 
   /* Controls */
   const [taxRate, setTaxRate] = useState<number>(0);
   const [taxType, setTaxType] = useState<TaxType>("exclusive");
-  const [productType, setProductType] = useState<ProductType>("single");
+  const [productType, setProductType] = useState<ProductType>(
+    mode === "edit" ? "variable" : "single"
+  );
   const [skuFormat, setSkuFormat] = useState<SkuFormat>("sku-number");
   // Generated after mount: a random value during SSR cannot match the client.
   const [baseSkuPrefix, setBaseSkuPrefix] = useState<string>("");
@@ -286,6 +359,54 @@ export default function ProductVariationsSection() {
   useEffect(() => {
     refreshVariations();
   }, [refreshVariations]);
+
+  /* Edit mode: rebuild the option groups from the product's real variants so
+     the editor shows the stored attribute names, values, SKUs and stock. */
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!isEdit || hydratedRef.current) return;
+
+    const source = ctx.variants.filter((v) => v.attributes.length > 0);
+    if (source.length === 0) return;
+
+    hydratedRef.current = true;
+
+    const order: string[] = [];
+    const groupMap = new Map<string, VariationGroup>();
+
+    source.forEach((variant) => {
+      variant.attributes.forEach((attr) => {
+        let group = groupMap.get(attr.attributeId);
+        if (!group) {
+          group = {
+            id: `vg-${attr.attributeId}`,
+            variationId: attr.attributeId,
+            variationName: attr.attributeName,
+            rows: [],
+          };
+          groupMap.set(attr.attributeId, group);
+          order.push(attr.attributeId);
+        }
+
+        group.rows.push({
+          id: `row-${variant.id}-${attr.attributeId}`,
+          variantId: variant.id,
+          sku: variant.sku || "",
+          valueId: attr.valueId,
+          valueName: attr.value,
+          purchasePrice: variant.purchasePrice ?? 0,
+          purchasePriceInc: variant.purchasePriceInc ?? 0,
+          margin: variant.margin ?? 25,
+          sellingPrice: variant.price ?? 0,
+          sellingPriceInc: variant.sellingPriceInc ?? 0,
+          stock: variant.qty ?? 0,
+          image: variant.images[0] ?? null,
+        });
+      });
+    });
+
+    setGroups(order.map((id) => groupMap.get(id)!).filter(Boolean));
+  }, [isEdit, ctx.variants]);
 
   /* SKU Format Switch */
   const handleSkuFormatChange = (newFormat: SkuFormat) => {
@@ -633,7 +754,7 @@ export default function ProductVariationsSection() {
 
   /* Push pricing / variants into the product form context */
   useEffect(() => {
-    if (productType === "single") {
+    if (!isEdit && productType === "single") {
       const effectiveSelling =
         taxType === "inclusive"
           ? singleSellingPriceInc > 0
@@ -660,11 +781,35 @@ export default function ProductVariationsSection() {
       return;
     }
 
-    const built: VariantData[] = [];
+    const built: VariationsEditorVariant[] = [];
+    const builtById = new Map<string, VariationsEditorVariant>();
 
     groups.forEach((g) => {
       g.rows.forEach((r) => {
         if (!r.valueId) return;
+
+        const attribute = {
+          attributeId: g.variationId,
+          valueId: r.valueId,
+          attributeName: g.variationName,
+          value: r.valueName,
+        };
+
+        /* A variant that spans several attributes appears in every option
+           group, so collect each of its attributes exactly once. */
+        if (r.variantId) {
+          const alreadyBuilt = builtById.get(r.variantId);
+          if (alreadyBuilt) {
+            if (
+              !alreadyBuilt.attributes.some(
+                (a) => a.attributeId === g.variationId
+              )
+            ) {
+              alreadyBuilt.attributes.push(attribute);
+            }
+            return;
+          }
+        }
 
         const effectiveSelling =
           taxType === "inclusive"
@@ -677,27 +822,45 @@ export default function ProductVariationsSection() {
             ? r.purchasePrice
             : 0;
 
-        built.push({
-          id: `var-${g.id}-${r.id}`,
+        const source = r.variantId
+          ? variantsRef.current.find((v) => v.id === r.variantId)
+          : undefined;
+
+        const variant: VariationsEditorVariant = {
+          id: r.variantId || `var-${g.id}-${r.id}`,
           sku: r.sku || undefined,
           price: effectiveSelling,
           qty: Number(r.stock) >= 0 ? Number(r.stock) : 0,
-          purchasePrice: r.purchasePrice,
-          purchasePriceInc: r.purchasePriceInc,
-          margin: r.margin,
-          sellingPriceInc: r.sellingPriceInc,
-          images: r.image ? [r.image] : [],
-          attributes: [
-            {
-              attributeId: g.variationId,
-              valueId: r.valueId,
-              attributeName: g.variationName,
-              value: r.valueName,
-            },
-          ],
-        });
+          offerPrice: source?.offerPrice ?? undefined,
+          images: r.image instanceof File ? [r.image] : source?.images ?? [],
+          attributes: [attribute],
+          isNew: !r.variantId,
+          isModified: !!r.variantId,
+        };
+
+        /* Only send cost/margin values that exist, so a variant saved without
+           them keeps its stored values instead of being reset to zero. */
+        if (!r.variantId || source?.purchasePrice != null) {
+          variant.purchasePrice = r.purchasePrice;
+        }
+        if (!r.variantId || source?.purchasePriceInc != null) {
+          variant.purchasePriceInc = r.purchasePriceInc;
+        }
+        if (!r.variantId || source?.margin != null) {
+          variant.margin = r.margin;
+        }
+        if (!r.variantId || source?.sellingPriceInc != null) {
+          variant.sellingPriceInc = r.sellingPriceInc;
+        }
+
+        built.push(variant);
+        if (r.variantId) builtById.set(r.variantId, variant);
       });
     });
+
+    /* Never wipe a saved product's variants just because no option group has
+       been filled in yet. */
+    if (isEdit && built.length === 0) return;
 
     setVariants(built);
 
@@ -824,7 +987,8 @@ export default function ProductVariationsSection() {
           </Select>
         </div>
 
-        {/* Product Type */}
+        {/* Product Type (fixed to variable when editing an existing product) */}
+        {!isEdit && (
         <div>
           <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
             Product Type: <span className="text-red-500">*</span>
@@ -853,6 +1017,7 @@ export default function ProductVariationsSection() {
             </SelectContent>
           </Select>
         </div>
+        )}
       </div>
 
       {/* Single Product Pricing & Inventory */}
@@ -977,7 +1142,9 @@ export default function ProductVariationsSection() {
       {/* Variable Product Section */}
       {productType === "variable" && (
         <div className="space-y-4">
-          {/* Variation SKU Format Selector */}
+          {/* Variation SKU Format Selector (kept off for existing products so
+              stored SKUs are not regenerated) */}
+          {!isEdit && (
           <div className="flex flex-wrap items-center gap-6 text-xs text-gray-700 dark:text-gray-300">
             <span className="font-semibold flex items-center gap-1">
               Variation SKU Format
@@ -1008,6 +1175,7 @@ export default function ProductVariationsSection() {
               <span>SKUVariation (Example -&gt; ABCS, ABCM)</span>
             </label>
           </div>
+          )}
 
           {/* Add Variation Action Button */}
           <div className="flex items-center gap-2">
@@ -1336,4 +1504,53 @@ export default function ProductVariationsSection() {
       )}
     </div>
   );
+}
+
+function CreateVariationsSection() {
+  const { variants, setVariants, updateBaseProduct } = useConfigurableProduct();
+
+  return (
+    <VariationsEditor
+      mode="create"
+      ctx={{
+        variants: variants as VariationsEditorVariant[],
+        setVariants: (next) => setVariants(next as VariantData[]),
+        updateBaseProduct: (patch) =>
+          updateBaseProduct(patch as Partial<BaseProductData>),
+      }}
+    />
+  );
+}
+
+function EditVariationsSection() {
+  const { variants, setVariants, removeVariant, updateBaseProduct } =
+    useEditProduct();
+
+  return (
+    <VariationsEditor
+      mode="edit"
+      ctx={{
+        variants: variants as VariationsEditorVariant[],
+        setVariants: (next) => {
+          /* Rows deleted in the editor must reach the API as deleted variants. */
+          const nextIds = new Set(next.map((v) => v.id));
+          variants
+            .filter((v) => !v.isNew && !nextIds.has(v.id))
+            .forEach((v) => removeVariant(v.id));
+          setVariants(next as EditVariantData[]);
+        },
+        updateBaseProduct: (patch) =>
+          updateBaseProduct(patch as Partial<EditBaseProductData>),
+      }}
+    />
+  );
+}
+
+export default function ProductVariationsSection({
+  mode = "create",
+}: {
+  mode?: "create" | "edit";
+}) {
+  if (mode === "edit") return <EditVariationsSection />;
+  return <CreateVariationsSection />;
 }

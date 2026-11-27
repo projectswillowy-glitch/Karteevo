@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { EditProductProvider, useEditProduct } from "@/context/EcitProductContext";
 import type { ProductDetail } from "@/types/product";
 import EditProductFormSection from "./EditProductForm";
-import EditProductImageAndCategories from "./EditProductImageAndCategories";
+import EditProductImageAndCategories, {
+  MAX_THUMBNAILS,
+} from "./EditProductImageAndCategories";
 import ProductVariationsSection from "./ProductVariationsSection";
 import { API_URL } from "@/lib/api-client";
 
@@ -43,12 +45,25 @@ function EditProductFormContent({ productId }: { productId: string }) {
         if (response.ok && res.data) {
           const product: ProductDetail = res.data;
 
+          // Older products were saved without product-level subimages, so their
+          // images only live on the variants. Seed the gallery from those so the
+          // edit page shows the existing images instead of an empty thumbnail row.
+          const variantImages = Array.from(
+            new Set(
+              product.variants.flatMap((variant) => variant.images || [])
+            )
+          );
+          const existingThumbnails =
+            product.subimage && product.subimage.length > 0
+              ? product.subimage
+              : variantImages.slice(0, MAX_THUMBNAILS);
+
           // Set base product data
           setBaseProduct({
             name: product.name,
             description: product.description || "",
             mainImage: product.image, // URL string (or data URL for legacy uploads)
-            thumbnails: product.subimage || [], // existing subimages (old images)
+            thumbnails: existingThumbnails, // existing subimages (old images)
             basePrice: product.variants[0]?.price || 0,
             baseQuantity: product.variants.reduce((sum, v) => sum + v.qty, 0),
             baseDiscountPrice: product.variants[0]?.offerPrice || 0,

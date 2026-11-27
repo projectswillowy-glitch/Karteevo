@@ -33,7 +33,7 @@ interface Brand {
   name: string;
 }
 
-const MAX_THUMBNAILS = 3;
+export const MAX_THUMBNAILS = 3;
 
 export default function EditProductImageAndCategories() {
   const { baseProduct, updateBaseProduct, isFileImage } = useEditProduct();

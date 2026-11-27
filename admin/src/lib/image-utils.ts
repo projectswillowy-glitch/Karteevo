@@ -1,4 +1,10 @@
 /**
+ * Serverless hosts (Vercel) reject request bodies above ~4.5 MB with a 413
+ * before the request reaches the API, so uploads must stay well below that.
+ */
+export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
+/**
  * Compresses an image file on the client side before uploading.
  * @param file The original image file
  * @param maxWidth Maximum width of the compressed image
@@ -51,7 +57,10 @@ export async function compressImage(
             if (!blob) {
               return reject(new Error('Canvas to Blob failed'));
             }
-            const compressedFile = new File([blob], file.name, {
+            // The blob is always JPEG, so the extension must match it: the
+            // backend derives the upload mime type from the file name.
+            const jpgName = `${file.name.replace(/\.[^./\\]+$/, '') || 'image'}.jpg`;
+            const compressedFile = new File([blob], jpgName, {
               type: 'image/jpeg',
               lastModified: Date.now(),
             });
@@ -65,4 +74,36 @@ export async function compressImage(
     };
     reader.onerror = (err) => reject(err);
   });
+}
+
+/**
+ * Shrinks an image until it fits within the host's request-body limit.
+ * Throws a user-facing error when even the hardest compression is too big.
+ */
+export async function prepareUploadImage(
+  file: File,
+  maxWidth: number = 1920,
+  maxHeight: number = 1920,
+  quality: number = 0.82
+): Promise<File> {
+  const attempts: Array<[number, number, number]> = [
+    [maxWidth, maxHeight, quality],
+    [1600, 1600, 0.75],
+    [1200, 1200, 0.65],
+  ];
+
+  let lastError: unknown = null;
+  for (const [width, height, q] of attempts) {
+    try {
+      const compressed = await compressImage(file, width, height, q);
+      if (compressed.size <= MAX_UPLOAD_BYTES) return compressed;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) {
+    throw new Error('Could not process this image. Please try a JPG or PNG file.');
+  }
+  throw new Error('Image is too large to upload. Please choose a smaller image.');
 }

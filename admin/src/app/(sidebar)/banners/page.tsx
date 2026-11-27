@@ -26,6 +26,7 @@ import {
   ChevronLeft, ChevronRight, Link as LinkIcon, Eye, EyeOff,
 } from "lucide-react";
 import { API_URL } from "@/lib/api-client";
+import { prepareUploadImage } from "@/lib/image-utils";
 
 const PAGE_SIZE = 6;
 const MIN_ACTIVE = 2;
@@ -45,9 +46,11 @@ type Banner = {
   isActive: boolean;
 };
 
+// The raw file is compressed before it is sent, so a large photo is fine —
+// this only rejects files too big to decode in the browser.
 const validateImageSize = (file: File): boolean => {
-  if (file.size > 8 * 1024 * 1024) {
-    toast.error("Image must be under 8 MB");
+  if (file.size > 25 * 1024 * 1024) {
+    toast.error("Image must be under 25 MB");
     return false;
   }
   return true;
@@ -184,12 +187,19 @@ function EditBannerDialog({ open, setOpen, banner, onUpdated }: {
       formData.append("description", description.trim());
       formData.append("buttonText", buttonText.trim());
       formData.append("buttonLink", buttonLink.trim());
-      if (file) formData.append("image", file);
+      if (file) formData.append("image", await prepareUploadImage(file));
       const res = await fetch(`${API_URL}/banners/${banner.id}`, { method: "PATCH", body: formData });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || (res.status === 413
+          ? "Image is too large to upload. Please choose a smaller image."
+          : "Failed to update banner"));
+      }
       toast.success("Banner updated");
       onUpdated(); setOpen(false);
-    } catch { toast.error("Failed to update banner"); }
+    } catch (err: unknown) {
+      toast.error((err as Error).message || "Failed to update banner");
+    }
     finally { setLoading(false); }
   };
 
@@ -362,11 +372,13 @@ export default function AdminBannersPage() {
       formData.append("description", description.trim());
       formData.append("buttonText", buttonText.trim());
       formData.append("buttonLink", buttonLink.trim());
-      formData.append("image", file);
+      formData.append("image", await prepareUploadImage(file));
       const res = await fetch(`${API_URL}/banners`, { method: "POST", body: formData });
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed");
+        const err = await res.json().catch(() => null);
+        throw new Error(err?.error || (res.status === 413
+          ? "Image is too large to upload. Please choose a smaller image."
+          : "Failed to add banner"));
       }
       toast.success("Banner added successfully");
       setTitle(""); setTag(""); setOfferPrice(""); setDescription(""); setButtonText(""); setButtonLink("");
@@ -457,7 +469,7 @@ export default function AdminBannersPage() {
                       <ImageIcon className="w-10 h-10" />
                       <div className="text-center">
                         <p className="text-sm font-medium">Click to upload banner image</p>
-                        <p className="text-xs">Recommended: 1920×800px or wider. Max 8 MB.</p>
+                        <p className="text-xs">Recommended: 1920×800px or wider. Large images are resized automatically.</p>
                       </div>
                     </div>
                   )}

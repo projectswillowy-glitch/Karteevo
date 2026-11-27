@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { ArrowUp, ArrowDown, MoreVertical, ImageIcon, Eye, Palette, Type, MousePointerClick } from "lucide-react";
 import { API_URL } from "@/lib/api-client";
+import { prepareUploadImage } from "@/lib/image-utils";
 
 type OfferSlide = {
   id: string;
@@ -453,7 +454,7 @@ function EditSlideDialog({ open, setOpen, slide, onUpdated }: {
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
-    if (f.size > 5 * 1024 * 1024) { toast.error("Image must be under 5 MB"); return; }
+    if (f.size > 25 * 1024 * 1024) { toast.error("Image must be under 25 MB"); return; }
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -463,7 +464,7 @@ function EditSlideDialog({ open, setOpen, slide, onUpdated }: {
     try {
       const formData = new FormData();
       if (values.route !== undefined) formData.append("route", values.route ?? "");
-      if (file) formData.append("image", file);
+      if (file) formData.append("image", await prepareUploadImage(file));
       // Content
       formData.append("title", values.title ?? "");
       formData.append("tagline", values.tagline ?? "");
@@ -479,10 +480,12 @@ function EditSlideDialog({ open, setOpen, slide, onUpdated }: {
       formData.append("imageOpacity", String(values.imageOpacity ?? 0.85));
 
       const res = await fetch(`${API_URL}/offer-slides/${slide.id}`, { method: "PATCH", body: formData });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error(res.status === 413
+        ? "Image is too large to upload. Please choose a smaller image."
+        : "Failed to update slide");
       toast.success("Slide updated successfully");
       onUpdated(); setOpen(false);
-    } catch { toast.error("Failed to update slide"); }
+    } catch (err: unknown) { toast.error((err as Error).message || "Failed to update slide"); }
     finally { setLoading(false); }
   };
 
@@ -572,7 +575,7 @@ export default function AdminOfferSlidesPage() {
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if (!f) return;
-    if (f.size > 5 * 1024 * 1024) { toast.error("Image must be under 5 MB"); return; }
+    if (f.size > 25 * 1024 * 1024) { toast.error("Image must be under 25 MB"); return; }
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
@@ -584,7 +587,7 @@ export default function AdminOfferSlidesPage() {
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", await prepareUploadImage(file));
       formData.append("route", newValues.route ?? "");
       // Content
       if (newValues.title) formData.append("title", newValues.title);
@@ -601,7 +604,9 @@ export default function AdminOfferSlidesPage() {
       formData.append("imageOpacity", String(newValues.imageOpacity ?? 0.85));
 
       const res = await fetch(`${API_URL}/offer-slides`, { method: "POST", body: formData });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error(res.status === 413
+        ? "Image is too large to upload. Please choose a smaller image."
+        : "Failed to add slide");
       toast.success("Offer slide added successfully");
       setNewValues({
         route: "",
@@ -615,7 +620,7 @@ export default function AdminOfferSlidesPage() {
       });
       setFile(null); setPreview("");
       fetchSlides();
-    } catch { toast.error("Failed to add slide"); }
+    } catch (err: unknown) { toast.error((err as Error).message || "Failed to add slide"); }
     finally { setUploading(false); }
   };
 
